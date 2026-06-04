@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { EventBus } from './EventBus';
 import { HubScene } from './scenes/HubScene';
-import { PillarGamification } from './scenes/PillarGamification';
+import { PillarScene } from './scenes/PillarScene';
+import { RoomScene } from './scenes/RoomScene';
 
 /**
  * Configuración base del juego Phaser 4.
@@ -47,7 +48,7 @@ const config: Phaser.Types.Core.GameConfig = {
     activePointers: 3,
   },
   banner: false,
-  scene: [HubScene, PillarGamification],
+  scene: [HubScene, PillarScene, RoomScene],
 };
 
 /**
