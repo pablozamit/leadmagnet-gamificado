@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import PhaserGame, { type IRefPhaserGame } from './components/PhaserGame';
 import MissionIntro from './components/MissionIntro';
 import ProgressBar from './components/ProgressBar';
-import BrandPanel from './components/BrandPanel';
+import DialogueOverlay from './components/DialogueOverlay';
 import { EventBus } from './game/EventBus';
 import { loadProgress, saveProgress, type GameProgress } from './game/utils/storage';
 import type { Brand } from './data/brandData';
@@ -107,11 +107,6 @@ export default function App() {
     setPhase('hub');
   };
 
-  const handleCloseBrandPanel = (): void => {
-    setActiveBrand(null);
-    EventBus.emit('panel-closed');
-  };
-
   const completedPillars = progress?.pillarsCompleted.length ?? 0;
 
   return (
@@ -129,7 +124,7 @@ export default function App() {
               frasesClaveCount={progress?.frasesClave.length ?? 0}
             />
           )}
-          <BrandPanel brand={activeBrand} onClose={handleCloseBrandPanel} />
+          <DialogueOverlay />
         </div>
       )}
 

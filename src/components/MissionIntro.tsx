@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createInitialProgress, saveProgress, type GameProgress } from '../game/utils/storage';
+import { EventBus } from '../game/EventBus';
 
 interface MissionIntroProps {
   /** Callback con el progreso inicial cuando el lead se registra. */
@@ -59,6 +60,7 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
     const progress = createInitialProgress(name, email);
     saveProgress(progress);
     setPhase('welcome');
+    EventBus.emit('lead-capture-complete', progress);
     setTimeout(() => onComplete(progress), 1600);
   };
 
