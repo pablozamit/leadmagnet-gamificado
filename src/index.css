@@ -1681,11 +1681,12 @@
   }
 
   .fi-hud__desktop-extra {
-    display: none !important;
-    height: 0;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
+    display: block !important;
+    width: 100%;
+  }
+
+  .fi-hud__meta {
+    padding: 0 20px 14px;
   }
 
   .fi-hud__topband {
@@ -1709,6 +1710,10 @@
 
   .fi-hud__title-short {
     display: inline !important;
+  }
+
+  .fi-hud__mobile-hide {
+    display: none !important;
   }
 
   .fi-hud__percent {

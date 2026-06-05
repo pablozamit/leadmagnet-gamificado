@@ -57,7 +57,8 @@ export class AgataSpeechBubble {
     this.onChoice = handlers.onChoice;
     this.clearChoices();
 
-    this.bubbleW = Math.min(maxWidth, 320);
+    const isMobile = this.scene.scale.width <= 480;
+    this.bubbleW = Math.min(maxWidth, isMobile ? 350 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
 
     this.nameText.setText('ÁGATA');
@@ -128,7 +129,13 @@ export class AgataSpeechBubble {
     this.bg.lineStyle(2, 0x705893, 0.45);
     this.bg.fillRoundedRect(0, 0, w, h, r);
     this.bg.strokeRoundedRect(0, 0, w, h, r);
-    this.bg.fillTriangle(w * 0.22, h, w * 0.32, h + 14, w * 0.12, h);
+
+    // Comic tail (más fina y centrada hacia Ágata)
+    const tailX = w * 0.15;
+    this.bg.fillTriangle(tailX, h, tailX + 24, h, tailX + 8, h + 12);
+    this.bg.lineStyle(2, 0x705893, 0.45);
+    this.bg.lineBetween(tailX, h, tailX + 8, h + 12);
+    this.bg.lineBetween(tailX + 24, h, tailX + 8, h + 12);
 
     this.nameText.setPosition(PADDING, PADDING);
     this.bodyText.setPosition(PADDING, PADDING + 18);
@@ -136,15 +143,22 @@ export class AgataSpeechBubble {
   }
 
   private layoutAt(anchorX: number, anchorTopY: number): void {
-    let x = anchorX - this.bubbleW / 2;
-    const margin = 12;
+    const isMobile = this.scene.scale.width <= 480;
+    // En móvil, la burbuja se desplaza un poco a la derecha para que el "pico"
+    // coincida mejor con Ágata que está a la izquierda.
+    let x = anchorX - this.bubbleW * (isMobile ? 0.15 : 0.2);
+    const margin = 8;
     x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
-    const y = anchorTopY - this.bubbleH - 18;
+
+    // Anclaje vertical: un poco más de separación para que no parezca que le toca la cara
+    const y = anchorTopY - this.bubbleH - 10;
+
     this.container.setPosition(x, y);
   }
 
   public setPosition(anchorX: number, anchorTopY: number, maxWidth: number): void {
-    this.bubbleW = Math.min(maxWidth, 320);
+    const isMobile = this.scene.scale.width <= 480;
+    this.bubbleW = Math.min(maxWidth, isMobile ? 350 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);

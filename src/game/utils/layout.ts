@@ -22,12 +22,13 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
 
   /** HUD en React encima del canvas: el juego ya no reserva píxeles extra arriba. */
   const hudTop = 0;
-  const agataLaneWidth = Math.round(w * (isMobile ? AGATA_LANE_RATIO : 0.28));
+  // En móvil, Ágata ocupa una porción más clara de la izquierda
+  const agataLaneWidth = Math.round(w * (isMobile ? 0.42 : 0.28));
 
   const playArea = new Phaser.Geom.Rectangle(
-    agataLaneWidth + PLAY_MARGIN,
+    agataLaneWidth + (isMobile ? 0 : PLAY_MARGIN),
     PLAY_MARGIN,
-    w - agataLaneWidth - PLAY_MARGIN * 2,
+    w - agataLaneWidth - PLAY_MARGIN,
     h - PLAY_MARGIN * 2,
   );
 
@@ -62,18 +63,23 @@ export function getAgataNpcPosition(
   zones: SafeZones,
 ): { x: number; y: number; scale: number; bubbleMaxWidth: number } {
   const targetHeight = zones.isMobile
-    ? Math.min(scale.height * 0.36, zones.playArea.height * 0.72)
+    ? Math.min(scale.height * 0.38, 280)
     : Math.min(scale.height * 0.42, 340);
 
   const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
-  const x = zones.agataLaneWidth * 0.52;
-  const y = zones.playArea.y + zones.playArea.height * 0.88;
+
+  // Posición: izquierda, apoyada en el fondo
+  const x = zones.isMobile
+    ? zones.agataLaneWidth * 0.55
+    : zones.agataLaneWidth * 0.52;
+
+  const y = scale.height - (zones.isMobile ? 25 : 40);
 
   return {
     x,
     y,
     scale: spriteScale,
-    bubbleMaxWidth: Math.min(scale.width - 24, zones.isMobile ? scale.width * 0.92 : 340),
+    bubbleMaxWidth: zones.isMobile ? scale.width * 0.78 : 340,
   };
 }
 
@@ -81,16 +87,35 @@ export function getAgataNpcPosition(
 export function getHubPortalPositions(
   playArea: Phaser.Geom.Rectangle,
 ): Array<{ x: number; y: number }> {
-  const cols = [0.32, 0.72];
-  const rows = [0.35, 0.68];
-  const out: Array<{ x: number; y: number }> = [];
-  for (const row of rows) {
-    for (const col of cols) {
-      out.push({
-        x: playArea.x + playArea.width * col,
-        y: playArea.y + playArea.height * row,
-      });
+  const isMobile = playArea.x > 50; // Heuristic: if agataLaneWidth is large, it's mobile
+
+  if (isMobile) {
+    // Cuadrícula 2x2 para móvil con más espacio vertical para Ágata y burbuja
+    const cols = [0.22, 0.78];
+    const rows = [0.24, 0.58]; // Bajamos un poco los portales superiores y subimos los inferiores
+    const out: Array<{ x: number; y: number }> = [];
+    for (const row of rows) {
+      for (const col of cols) {
+        out.push({
+          x: playArea.x + playArea.width * col,
+          y: playArea.y + playArea.height * row,
+        });
+      }
     }
+    return out;
+  } else {
+    // Desktop layout original (o similar)
+    const cols = [0.32, 0.72];
+    const rows = [0.35, 0.68];
+    const out: Array<{ x: number; y: number }> = [];
+    for (const row of rows) {
+      for (const col of cols) {
+        out.push({
+          x: playArea.x + playArea.width * col,
+          y: playArea.y + playArea.height * row,
+        });
+      }
+    }
+    return out;
   }
-  return out;
 }
