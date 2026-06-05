@@ -101,7 +101,12 @@ export class AgataGuide {
 
   /** Cierra el diálogo activo para permitir navegación (portales, marcas, volver). */
   public forceEndDialogue(): void {
-    if (this.activeDialogue) this.endDialogue();
+    if (this.activeDialogue) {
+      this.endDialogue();
+    } else {
+      // Incluso si no hay diálogo activo, nos aseguramos de que la burbuja esté oculta
+      this.bubble.hide();
+    }
   }
 
   public playDialogue(dialogue: BrandDialogue, brandId?: string, onComplete?: () => void): void {

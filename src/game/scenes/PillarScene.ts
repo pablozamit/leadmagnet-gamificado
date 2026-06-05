@@ -4,7 +4,7 @@ import { EventBus } from '../EventBus';
 import { pillars, type PillarData, type Brand } from '../../data/brandData';
 import { getSafeZones, getPillarStationPositions } from '../utils/layout';
 
-const STATION_DEPTH = 40;
+const STATION_DEPTH = 150;
 const UI_DEPTH = 200;
 
 export class PillarScene extends Phaser.Scene {
@@ -47,6 +47,7 @@ export class PillarScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#0a1428');
     this.cameras.main.fadeIn(500, 0, 0, 0);
     this.scale.on('resize', this.onResize, this);
+    this.events.once('shutdown', this.shutdown, this);
 
     EventBus.emit('current-scene-ready', this);
     EventBus.emit('pillar-progress-updated', {
@@ -183,6 +184,10 @@ export class PillarScene extends Phaser.Scene {
 
   private enterRoom(brand: Brand): void {
     EventBus.emit('dialogue-finished');
+
+    // Si la cámara ya está en fade out, no repetimos
+    if (this.cameras.main.fadeEffect.isRunning) return;
+
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('RoomScene', { brand, pillarId: this.pillarData.id });
@@ -191,6 +196,9 @@ export class PillarScene extends Phaser.Scene {
 
   private returnToHub(): void {
     EventBus.emit('dialogue-finished');
+
+    if (this.cameras.main.fadeEffect.isRunning) return;
+
     this.cameras.main.fadeOut(300, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('HubScene');

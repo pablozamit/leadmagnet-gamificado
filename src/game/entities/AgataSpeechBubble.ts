@@ -161,29 +161,33 @@ export class AgataSpeechBubble {
   public enableTapAdvance(): void {
     this.choiceZones.forEach((z) => z.destroy());
     this.choiceZones.length = 0;
+
+    // Solo creamos la zona si el hintText es visible (no hay opciones)
+    if (!this.hintText.visible) return;
+
     const zone = this.scene.add
       .zone(0, 0, this.bubbleW, this.bubbleH)
       .setOrigin(0, 0)
       .setInteractive({ useHandCursor: true });
+
     zone.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      if (this.hintText.visible) {
-        p.event?.stopPropagation();
-        this.onAdvance?.();
-      }
+      p.event?.stopPropagation();
+      this.onAdvance?.();
     });
+
     this.container.add(zone);
     this.container.sendToBack(zone);
     this.choiceZones.push(zone);
   }
 
   public hide(): void {
+    this.clearChoices();
     this.scene.tweens.add({
       targets: this.container,
       alpha: 0,
       duration: 180,
       onComplete: () => {
         this.container.setVisible(false);
-        this.clearChoices();
       },
     });
   }

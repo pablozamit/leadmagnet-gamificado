@@ -39,6 +39,7 @@ export class HubScene extends Phaser.Scene {
 
     this.scale.on('resize', this.onResize, this);
     this.events.on('portal-clicked', this.handlePortalClick, this);
+    this.events.once('shutdown', this.shutdown, this);
 
     this.cameras.main.setBackgroundColor('#0a0a1e');
     this.cameras.main.fadeIn(500, 0, 0, 0);
