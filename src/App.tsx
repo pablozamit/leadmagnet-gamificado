@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import PhaserGame, { type IRefPhaserGame } from './components/PhaserGame';
 import MissionIntro from './components/MissionIntro';
 import ProgressBar from './components/ProgressBar';
-import BrandPanel from './components/BrandPanel';
-import AgataDialogue from './components/AgataDialogue';
+import DialogueOverlay from './components/DialogueOverlay';
 import { EventBus } from './game/EventBus';
 import { loadProgress, saveProgress, type GameProgress } from './game/utils/storage';
 import type { Brand } from './data/brandData';
@@ -96,24 +95,18 @@ export default function App() {
     };
   }, []);
 
-  // Volver al Hub sin reiniciar PreloadScene (assets ya cargados)
+  // Cuando entramos al hub, iniciamos HubScene
   useEffect(() => {
     const sm = gameRef.current.scene?.scene;
     if (phase !== 'hub' || !sm) return;
     if (sm.isActive('PreloadScene')) return;
-    if (!sm.isActive('HubScene')) {
-      sm.start('HubScene');
-    }
+    if (!sm.isActive('HubScene')) sm.start('HubScene');
   }, [phase]);
 
   const handleMissionComplete = (newProgress: GameProgress): void => {
     setProgress(newProgress);
     setPhase('hub');
-  };
-
-  const handleCloseBrandPanel = (): void => {
-    setActiveBrand(null);
-    EventBus.emit('panel-closed');
+    EventBus.emit('lead-capture-complete');
   };
 
   const completedPillars = progress?.pillarsCompleted.length ?? 0;
@@ -133,8 +126,7 @@ export default function App() {
               frasesClaveCount={progress?.frasesClave.length ?? 0}
             />
           )}
-          <AgataDialogue />
-          <BrandPanel brand={activeBrand} onClose={handleCloseBrandPanel} />
+          <DialogueOverlay />
         </div>
       )}
 

@@ -5,10 +5,9 @@ import { AgataGuide } from '../entities/AgataGuide';
 import { EventBus } from '../EventBus';
 import { getSafeZones, getHubPortalPositions } from '../utils/layout';
 import { PILLAR_ORDER } from '../../data/pillarAssets';
-import { hubIntroDialogue } from '../../data/agataDialogues';
 
 /**
- * `HubScene` - El Nodo Digital con 4 portales e Ágata como guía.
+ * `HubScene` - Museo con 4 portales, iconos PNG y Ágata guía.
  */
 export class HubScene extends Phaser.Scene {
   private player!: Player;
@@ -19,6 +18,7 @@ export class HubScene extends Phaser.Scene {
   private titleText: Phaser.GameObjects.Text | null = null;
   private subtitleText: Phaser.GameObjects.Text | null = null;
   private playBounds = new Phaser.Geom.Rectangle(0, 0, 0, 0);
+  private introStarted = false;
 
   constructor() {
     super({ key: 'HubScene' });
@@ -35,22 +35,28 @@ export class HubScene extends Phaser.Scene {
     this.createHint(zones.isCoarsePointer);
 
     this.agata = new AgataGuide(this);
-    this.time.delayedCall(300, () => {
-      this.agata?.emitAnchorUpdate();
-      EventBus.emit('agata-dialogue-open', {
-        script: hubIntroDialogue,
-        chainIds: ['welcome', 'choose_path'],
-      });
+    EventBus.on('lead-capture-complete', this.startIntro, this);
+    this.time.delayedCall(500, () => this.startIntro());
+    this.events.once('shutdown', () => {
+      EventBus.off('lead-capture-complete', this.startIntro, this);
     });
 
     this.scale.on('resize', this.onResize, this);
     this.events.on('portal-clicked', this.handlePortalClick, this);
-
     this.player.onInteract(() => this.handleInteract());
 
     this.cameras.main.setBackgroundColor('#0a0a1e');
+    this.cameras.main.fadeIn(500, 0, 0, 0);
     EventBus.emit('current-scene-ready', this);
   }
+
+  private startIntro = (): void => {
+    if (this.introStarted) return;
+    this.introStarted = true;
+    this.agata?.emitAnchorUpdate();
+    this.agata?.playState('point');
+    EventBus.emit('start-hub-intro');
+  };
 
   private createBackground(width: number, height: number, isMobile: boolean): void {
     const cx = width / 2;
@@ -76,30 +82,30 @@ export class HubScene extends Phaser.Scene {
     }
 
     const titleY = this.playBounds.y - (isMobile ? 28 : 36);
-    this.titleText = this.add.text(cx, titleY, 'EL NODO DIGITAL', {
-      fontSize: isMobile ? '18px' : '22px',
+    this.titleText = this.add.text(cx, titleY, 'MUSEO DE LA DINAMIZACION DIGITAL', {
+      fontSize: isMobile ? '17px' : '22px',
       fontFamily: 'Montserrat, system-ui, sans-serif',
       color: '#ffffff',
       fontStyle: 'bold',
-      stroke: '#000000',
+      stroke: '#705893',
       strokeThickness: 4,
+      align: 'center',
+      wordWrap: { width: width - 40 },
     });
     this.titleText.setOrigin(0.5, 0.5);
     this.backgroundElements.push(this.titleText);
 
     const zones = getSafeZones(this.scale);
     const hintLabel = zones.isCoarsePointer
-      ? 'Toca un portal brillante para entrar'
-      : 'Acércate a un portal. Pulsa E o haz clic para entrar.';
+      ? 'Toca un portal para entrar'
+      : 'Acercate a un portal - E o clic';
 
-    this.subtitleText = this.add.text(cx, titleY + 28, hintLabel, {
+    this.subtitleText = this.add.text(cx, titleY + 30, hintLabel, {
       fontSize: isMobile ? '12px' : '13px',
       fontFamily: 'Montserrat, system-ui, sans-serif',
       color: '#aaaaaa',
       stroke: '#000000',
       strokeThickness: 2,
-      align: 'center',
-      wordWrap: { width: width - 48 },
     });
     this.subtitleText.setOrigin(0.5, 0.5);
     this.backgroundElements.push(this.subtitleText);
@@ -107,22 +113,8 @@ export class HubScene extends Phaser.Scene {
 
   private createPortals(): void {
     const positions = getHubPortalPositions(this.playBounds);
-    const lockedMap: Record<PillarId, boolean> = {
-      gamification: false,
-      acompanamiento: true,
-      celebracion: true,
-      comunidad: true,
-    };
-
     this.portals = PILLAR_ORDER.map((id, index) =>
-      Portal.fromPillar(
-        this,
-        positions[index].x,
-        positions[index].y,
-        id,
-        lockedMap[id],
-        index * 80,
-      ),
+      Portal.fromPillar(this, positions[index].x, positions[index].y, id, false, index * 80),
     );
   }
 
@@ -147,7 +139,7 @@ export class HubScene extends Phaser.Scene {
       const portal = this.portals.find((p) => p.config.id === pillarId);
       if (portal && this.hintText) {
         const action = isCoarsePointer ? 'Toca' : 'Entrar (E)';
-        this.hintText.setText(`${action} · ${portal.config.label}`);
+        this.hintText.setText(`${action} - ${portal.config.label}`);
         this.hintText.setPosition(portal.container.x, portal.container.y - 88);
         this.hintText.setVisible(true);
       }
@@ -192,13 +184,11 @@ export class HubScene extends Phaser.Scene {
   }
 
   private enterPortal(pillarId: PillarId): void {
-    EventBus.emit('agata-dialogue-hide');
+    EventBus.emit('dialogue-finished');
     EventBus.emit('portal-entered', pillarId);
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
-      if (pillarId === 'gamification') {
-        this.scene.start('PillarGamification');
-      }
+      this.scene.start('PillarScene', { pillarId });
     });
   }
 

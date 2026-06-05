@@ -1055,6 +1055,89 @@
 }
 
 /* ============================================
+   DIALOGUE SYSTEM
+   ============================================ */
+.fi-dialogue-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 40px;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.fi-dialogue-box {
+  width: 100%;
+  max-width: 800px;
+  background: rgba(20, 20, 40, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(112, 88, 147, 0.4);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(112, 88, 147, 0.2);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.fi-dialogue-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fi-dialogue-text {
+  font-family: var(--fi-font-sans);
+  font-size: 18px;
+  line-height: 1.6;
+  color: #ffffff;
+  margin: 0;
+}
+
+.fi-dialogue-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.fi-dialogue-option-btn {
+  background: linear-gradient(135deg, var(--fi-purple), var(--fi-purple-light));
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-family: var(--fi-font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(112, 88, 147, 0.3);
+}
+
+.fi-dialogue-option-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(112, 88, 147, 0.5);
+  filter: brightness(1.1);
+}
+
+.fi-dialogue-hint {
+  font-size: 13px;
+  color: #888;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: fi-pulse-text 2s infinite;
+}
+
+@keyframes fi-pulse-text {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ============================================
    GAMIFIED MISSION (MVP) - NEW COMPONENTS
    ============================================ */
 

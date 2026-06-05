@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { PILLAR_ASSETS } from '../../data/pillarAssets';
 
-export type PillarId = 'gamification' | 'acompanamiento' | 'celebracion' | 'comunidad';
+export type PillarId = 'gamification' | 'acompanamiento' | 'celebracion' | 'fidelizacion';
 
 export interface PortalConfig {
   id: PillarId;

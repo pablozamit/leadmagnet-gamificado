@@ -1,4 +1,5 @@
 import type { PillarId } from '../game/entities/Portal';
+import { pillars } from './brandData';
 
 export interface PillarAssetConfig {
   id: PillarId;
@@ -8,40 +9,24 @@ export interface PillarAssetConfig {
   glowColor: number;
 }
 
-export const PILLAR_ASSETS: Record<PillarId, PillarAssetConfig> = {
-  gamification: {
-    id: 'gamification',
-    label: 'GAMIFICACIÓN',
-    icon: '/assets/icons/gamificacion.png',
-    color: 0x3a7bd5,
-    glowColor: 0x6ec6ff,
-  },
-  acompanamiento: {
-    id: 'acompanamiento',
-    label: 'ACOMPAÑAMIENTO',
-    icon: '/assets/icons/acompanamiento.png',
-    color: 0x4caf50,
-    glowColor: 0x80e27e,
-  },
-  celebracion: {
-    id: 'celebracion',
-    label: 'CELEBRACIÓN',
-    icon: '/assets/icons/celebracion.png',
-    color: 0xf6a000,
-    glowColor: 0xffd54f,
-  },
-  comunidad: {
-    id: 'comunidad',
-    label: 'COMUNIDAD',
-    icon: '/assets/icons/comunidad.png',
-    color: 0x9c27b0,
-    glowColor: 0xce93d8,
-  },
+const ICON_BY_PILLAR: Record<PillarId, string> = {
+  gamification: '/assets/icons/gamificacion.png',
+  acompanamiento: '/assets/icons/acompanamiento.png',
+  celebracion: '/assets/icons/celebracion.png',
+  fidelizacion: '/assets/icons/comunidad.png',
 };
 
-export const PILLAR_ORDER: PillarId[] = [
-  'gamification',
-  'acompanamiento',
-  'celebracion',
-  'comunidad',
-];
+export const PILLAR_ASSETS: Record<PillarId, PillarAssetConfig> = Object.fromEntries(
+  pillars.map((p) => [
+    p.id,
+    {
+      id: p.id as PillarId,
+      label: p.name,
+      icon: ICON_BY_PILLAR[p.id as PillarId],
+      color: p.color,
+      glowColor: p.glowColor,
+    },
+  ]),
+) as Record<PillarId, PillarAssetConfig>;
+
+export const PILLAR_ORDER: PillarId[] = pillars.map((p) => p.id as PillarId);
