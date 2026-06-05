@@ -9,9 +9,8 @@ export interface SafeZones {
   isCoarsePointer: boolean;
 }
 
-/** Altura reservada del HUD React (sincronizada con `.fi-hud` en index.css). */
-const HUD_TOP_MOBILE = 156;
-const HUD_TOP_DESKTOP = 108;
+/** Margen interno del canvas (HUD va fuera del canvas en flex). */
+const PLAY_MARGIN = 12;
 const AGATA_LANE_RATIO = 0.38;
 
 export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
@@ -21,14 +20,15 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const isCoarsePointer =
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
-  const hudTop = isMobile ? HUD_TOP_MOBILE : HUD_TOP_DESKTOP;
+  /** HUD en React encima del canvas: el juego ya no reserva píxeles extra arriba. */
+  const hudTop = 0;
   const agataLaneWidth = Math.round(w * (isMobile ? AGATA_LANE_RATIO : 0.28));
 
   const playArea = new Phaser.Geom.Rectangle(
-    agataLaneWidth + 8,
-    hudTop + 12,
-    w - agataLaneWidth - 20,
-    h - hudTop - 24,
+    agataLaneWidth + PLAY_MARGIN,
+    PLAY_MARGIN,
+    w - agataLaneWidth - PLAY_MARGIN * 2,
+    h - PLAY_MARGIN * 2,
   );
 
   return { hudTop, agataLaneWidth, playArea, isMobile, isCoarsePointer };

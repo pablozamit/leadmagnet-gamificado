@@ -122,13 +122,13 @@ export default function App() {
 
       {(phase === 'hub' || phase === 'pillar') && (
         <div className="fi-game-stage">
-          <PhaserGame ref={gameRef} />
           <ProgressBar
             completedPillars={completedPillars}
             totalPillars={4}
             currentPillar={currentPillar}
             frasesClaveCount={progress?.frasesClave.length ?? 0}
           />
+          <PhaserGame ref={gameRef} />
         </div>
       )}
 

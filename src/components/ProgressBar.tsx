@@ -9,7 +9,7 @@ interface ProgressBarProps {
 }
 
 /**
- * HUD compacto: título + progreso + 4 pilares sin aglomerar (móvil-first).
+ * HUD del hub: barra superior + iconos de pilares (mobile-first).
  */
 export default function ProgressBar({
   completedPillars,
@@ -22,20 +22,21 @@ export default function ProgressBar({
   return (
     <motion.header
       className="fi-hud"
-      initial={{ y: -40, opacity: 0 }}
+      initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.45 }}
+      transition={{ duration: 0.35 }}
     >
-      <div className="fi-hud__top">
-        <div className="fi-hud__title-block">
-          <h1 className="fi-hud__title">Museo de la Dinamización</h1>
-          <p className="fi-hud__subtitle">4 pilares · experiencia guiada</p>
-        </div>
-        <div className="fi-hud__stats">
-          <span className="fi-hud__percent">{percentage}%</span>
+      <div className="fi-hud__header">
+        <h1 className="fi-hud__title">Museo de la Dinamización</h1>
+        <div className="fi-hud__header-end">
+          <span className="fi-hud__percent" aria-label={`Progreso ${percentage} por ciento`}>
+            {percentage}%
+          </span>
           <span className="fi-hud__frases">{frasesClaveCount} frases</span>
         </div>
       </div>
+
+      <p className="fi-hud__subtitle">4 pilares · experiencia guiada</p>
 
       <div className="fi-hud__bar-track" aria-hidden>
         <motion.div
