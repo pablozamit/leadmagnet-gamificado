@@ -104,10 +104,10 @@ export class RoomScene extends Phaser.Scene {
   }
 
   private onDialogueFinished = (): void => {
-    if (this.exitHint) {
-      this.exitHint.setText('Pulsa ← Pilar para volver');
-      this.exitHint.setVisible(true);
-    }
+    // Si el diálogo terminó naturalmente (sin forzar), volvemos automáticamente al Hub
+    this.time.delayedCall(500, () => {
+      this.returnToHub();
+    });
   };
 
   private onResize = (): void => {
@@ -120,6 +120,15 @@ export class RoomScene extends Phaser.Scene {
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('PillarScene', { pillarId: this.pillarId });
+    });
+  };
+
+  private returnToHub = (): void => {
+    if (this.cameras.main.fadeEffect.isRunning) return;
+
+    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('HubScene', { fromCompletedPillar: true });
     });
   };
 

@@ -38,7 +38,12 @@ export function buildBrandDialogue(brand: Brand): BrandDialogue {
         speaker: 'agata',
         text: result.fraseClave,
         onComplete: 'frase-clave-collected',
-        options: [{ text: 'Volver al pilar', nextId: 'exit' }],
+        nextId: 'end',
+      },
+      end: {
+        id: 'end',
+        speaker: 'agata',
+        text: '¡Misión cumplida! Volvamos al museo para seguir explorando.',
       },
     },
   };

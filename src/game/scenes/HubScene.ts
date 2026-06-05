@@ -14,14 +14,16 @@ export class HubScene extends Phaser.Scene {
   private decor: Phaser.GameObjects.GameObject[] = [];
   private playBounds = new Phaser.Geom.Rectangle(0, 0, 0, 0);
   private introPlayed = false;
+  private fromCompletedPillar = false;
 
   constructor() {
     super({ key: 'HubScene' });
   }
 
-  init(): void {
+  init(data?: { fromCompletedPillar?: boolean }): void {
     // La escena se reutiliza: permitir volver a mostrar Ágata e intro
     this.introPlayed = false;
+    this.fromCompletedPillar = !!data?.fromCompletedPillar;
   }
 
   create(): void {
@@ -49,7 +51,23 @@ export class HubScene extends Phaser.Scene {
   private startIntro = (): void => {
     if (this.introPlayed) return;
     this.introPlayed = true;
-    EventBus.emit('start-hub-intro');
+
+    if (this.fromCompletedPillar) {
+      const welcomeBack: any = {
+        startNodeId: 'welcome',
+        nodes: {
+          welcome: {
+            id: 'welcome',
+            speaker: 'agata',
+            text: '¡Muy bien! Esa historia ha sido inspiradora. ¿Por qué otro pilar quieres seguir?',
+            options: [{ text: '¡A por otro!', nextId: '' }]
+          }
+        }
+      };
+      this.agata?.playDialogue(welcomeBack);
+    } else {
+      EventBus.emit('start-hub-intro');
+    }
   };
 
   private createDecor(zones: ReturnType<typeof getSafeZones>): void {
@@ -87,9 +105,16 @@ export class HubScene extends Phaser.Scene {
 
   private createPortals(): void {
     const positions = getHubPortalPositions(this.playBounds);
-    this.portals = PILLAR_ORDER.map((id, index) =>
-      Portal.fromPillar(this, positions[index].x, positions[index].y, id, false, index * 70),
-    );
+    const progress = (this.game as any).progress;
+    const completedList = progress?.pillarsCompleted || [];
+
+    this.portals = PILLAR_ORDER.map((id, index) => {
+      const portal = Portal.fromPillar(this, positions[index].x, positions[index].y, id, false, index * 70);
+      if (completedList.includes(id)) {
+        portal.setCompleted(true);
+      }
+      return portal;
+    });
   }
 
   private onResize = (): void => {

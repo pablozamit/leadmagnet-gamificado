@@ -40,6 +40,12 @@ export default function App() {
 
   // Suscribirse a eventos del juego
   useEffect(() => {
+    if (gameRef.current.game) {
+      (gameRef.current.game as any).progress = progress;
+    }
+  }, [progress]);
+
+  useEffect(() => {
     const onPortalEntered = (pillarId: string): void => {
       setCurrentPillar(pillarId);
       setPhase('pillar');
@@ -55,6 +61,19 @@ export default function App() {
         const updated: GameProgress = {
           ...prev,
           currentPillar: data.pillar,
+        };
+        saveProgress(updated);
+        return updated;
+      });
+    };
+
+    const onPillarCompleted = (pillarId: string): void => {
+      setProgress((prev) => {
+        if (!prev) return prev;
+        if (prev.pillarsCompleted.includes(pillarId)) return prev;
+        const updated: GameProgress = {
+          ...prev,
+          pillarsCompleted: [...prev.pillarsCompleted, pillarId],
         };
         saveProgress(updated);
         return updated;
@@ -88,6 +107,7 @@ export default function App() {
     EventBus.on('portal-entered', onPortalEntered);
     EventBus.on('brand-selected', onBrandSelected);
     EventBus.on('pillar-progress-updated', onPillarProgress);
+    EventBus.on('pillar-completed', onPillarCompleted);
     EventBus.on('frase-clave-collected', onFraseClaveCollected);
     EventBus.on('current-scene-ready', onSceneReady);
 
@@ -95,6 +115,7 @@ export default function App() {
       EventBus.off('portal-entered', onPortalEntered);
       EventBus.off('brand-selected', onBrandSelected);
       EventBus.off('pillar-progress-updated', onPillarProgress);
+      EventBus.off('pillar-completed', onPillarCompleted);
       EventBus.off('frase-clave-collected', onFraseClaveCollected);
       EventBus.off('current-scene-ready', onSceneReady);
     };
