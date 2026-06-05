@@ -10,11 +10,14 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.spritesheet('agata', '/assets/characters/agata-sheet.png', {
+    this.load.spritesheet('agata-idle', '/assets/characters/agata-idle.png', {
       frameWidth: AGATA_FRAME_WIDTH,
       frameHeight: AGATA_FRAME_HEIGHT,
     });
-    this.load.image('agata-mouth', '/assets/characters/agata-mouth.png');
+    this.load.spritesheet('agata-jump', '/assets/characters/agata-jump.png', {
+      frameWidth: AGATA_FRAME_WIDTH,
+      frameHeight: AGATA_FRAME_HEIGHT,
+    });
 
     for (const pillar of pillars) {
       const asset = PILLAR_ASSETS[pillar.id as keyof typeof PILLAR_ASSETS];

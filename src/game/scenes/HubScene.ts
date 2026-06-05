@@ -113,6 +113,9 @@ export class HubScene extends Phaser.Scene {
     this.events.on('portal-near', (pillarId: PillarId) => {
       const portal = this.portals.find((p) => p.config.id === pillarId);
       if (portal && this.hintText) {
+        // En móvil ocultamos el hint para menos desorden visual
+        if (this.scale.width <= 480) return;
+
         const action = isCoarsePointer ? 'Toca el portal' : 'Entrar (E)';
         this.hintText.setText(action);
         this.hintText.setPosition(portal.container.x, portal.container.y - 92);

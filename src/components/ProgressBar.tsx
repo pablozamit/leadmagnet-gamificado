@@ -62,9 +62,9 @@ export default function ProgressBar({
       </div>
 
       <div className="fi-hud__desktop-extra" aria-hidden="true">
-        <p className="fi-hud__subtitle">4 pilares · experiencia guiada</p>
+        <p className="fi-hud__subtitle fi-hud__mobile-hide">4 pilares · experiencia guiada</p>
         <div className="fi-hud__meta">
-          <span className="fi-hud__frases">{frasesClaveCount} frases clave</span>
+          <span className="fi-hud__frases fi-hud__mobile-hide">{frasesClaveCount} frases clave</span>
           <div className="fi-hud__bar-track">
             <motion.div
               className="fi-hud__bar-fill"
