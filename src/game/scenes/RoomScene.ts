@@ -39,6 +39,7 @@ export class RoomScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#050510');
     this.cameras.main.fadeIn(500, 0, 0, 0);
     this.scale.on('resize', this.onResize, this);
+    this.events.once('shutdown', this.shutdown, this);
 
     EventBus.emit('current-scene-ready', this);
     EventBus.emit('brand-selected', this.brand);
