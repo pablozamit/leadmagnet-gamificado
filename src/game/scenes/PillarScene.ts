@@ -99,50 +99,42 @@ export class PillarScene extends Phaser.Scene {
     this.pillarData.brands.forEach((brand, i) => {
       const { x, y } = positions[i];
 
-      const glow = this.add.circle(x, y, 42, this.pillarData.color, 0.2).setDepth(STATION_DEPTH);
-      const body = this.add
-        .rectangle(x, y, 64, 64, 0x1a4ba0, 0.85)
-        .setStrokeStyle(3, this.pillarData.glowColor, 1)
-        .setDepth(STATION_DEPTH + 1);
+      // Rediseño: Solo texto, sin iconos ni cajas
       const name = this.add
-        .text(x, y + 48, brand.name, {
-          fontSize: '13px',
+        .text(x, y, brand.name.toUpperCase(), {
+          fontSize: '18px',
           fontStyle: 'bold',
           color: '#ffffff',
           fontFamily: 'Montserrat, system-ui, sans-serif',
-          stroke: '#000000',
-          strokeThickness: 3,
+          backgroundColor: '#ffffff11',
+          padding: { x: 20, y: 12 },
         })
-        .setOrigin(0.5, 0)
-        .setDepth(STATION_DEPTH + 2);
-
-      const zone = this.add
-        .zone(x, y, 88, 110)
-        .setDepth(STATION_DEPTH + 3)
+        .setOrigin(0.5)
+        .setDepth(STATION_DEPTH + 2)
         .setInteractive({ useHandCursor: true });
-      zone.on('pointerdown', () => this.onStationClick(brand));
-      zone.on('pointerover', () => {
-        this.tweens.add({
-          targets: glow,
-          scale: 1.2,
-          duration: 120,
-          yoyo: true,
-        });
+
+      name.on('pointerdown', () => this.onStationClick(brand));
+
+      name.on('pointerover', () => {
+        name.setBackgroundColor('#ffffff22');
+        name.setScale(1.05);
       });
-      this.stationZones.push(zone);
+
+      name.on('pointerout', () => {
+        name.setBackgroundColor('#ffffff11');
+        name.setScale(1);
+      });
 
       this.tweens.add({
-        targets: glow,
-        scale: 1.15,
-        alpha: 0.08,
-        duration: 1500 + i * 200,
+        targets: name,
+        alpha: { from: 0.8, to: 1 },
+        duration: 1000 + i * 200,
         yoyo: true,
         repeat: -1,
-        ease: 'Sine.easeInOut',
+        ease: 'Sine.easeInOut'
       });
 
-      zone.setData('brand', brand);
-      zone.setData('visuals', { glow, body, name });
+      this.stationZones.push(name as any); // Reutilizamos el array para limpieza
     });
   }
 
@@ -185,17 +177,7 @@ export class PillarScene extends Phaser.Scene {
     );
     this.stationZones.forEach((zone, i) => {
       const { x, y } = positions[i];
-      zone.setPosition(x, y);
-      const visuals = zone.getData('visuals') as {
-        glow: Phaser.GameObjects.Arc;
-        body: Phaser.GameObjects.Rectangle;
-        name: Phaser.GameObjects.Text;
-      };
-      if (visuals) {
-        visuals.glow.setPosition(x, y);
-        visuals.body.setPosition(x, y);
-        visuals.name.setPosition(x, y + 48);
-      }
+      (zone as unknown as Phaser.GameObjects.Text).setPosition(x, y);
     });
   };
 

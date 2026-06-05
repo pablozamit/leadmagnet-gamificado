@@ -143,19 +143,7 @@ export class AgataSpeechBubble {
   }
 
   private layoutAt(anchorX: number, anchorTopY: number): void {
-    const isMobile = this.scene.scale.width <= 480;
     const margin = 8;
-
-    if (isMobile) {
-      const x = Phaser.Math.Clamp(
-        anchorX - this.bubbleW / 2,
-        margin,
-        this.scene.scale.width - this.bubbleW - margin,
-      );
-      this.container.setPosition(x, anchorTopY);
-      return;
-    }
-
     let x = anchorX - this.bubbleW * 0.2;
     x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
     const y = anchorTopY - this.bubbleH - 10;

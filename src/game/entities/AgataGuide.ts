@@ -72,6 +72,13 @@ export class AgataGuide {
     EventBus.on('start-brand-dialogue', this.onBrandDialogue, this);
   }
 
+  public update(): void {
+    if (this.currentNodeId && this.activeDialogue) {
+      const anchor = this.getBubbleAnchor();
+      this.bubble.setPosition(anchor.x, anchor.y, anchor.maxWidth);
+    }
+  }
+
   public showCharacter(): void {
     this.applyLayout();
     if (!this.visible) {
@@ -97,10 +104,11 @@ export class AgataGuide {
     if (this.activeDialogue) this.endDialogue();
   }
 
-  public playDialogue(dialogue: BrandDialogue, brandId?: string): void {
+  public playDialogue(dialogue: BrandDialogue, brandId?: string, onComplete?: () => void): void {
     this.showCharacter();
     this.activeDialogue = dialogue;
     this.activeBrandId = brandId ?? null;
+    (this.activeDialogue as any)._onFinished = onComplete;
     this.showNode(dialogue.startNodeId);
   }
 
@@ -151,12 +159,14 @@ export class AgataGuide {
   }
 
   private endDialogue(): void {
+    const callback = (this.activeDialogue as any)?._onFinished;
     this.bubble.hide();
     this.activeDialogue = null;
     this.currentNodeId = null;
     this.activeBrandId = null;
     this.playState('idle');
     EventBus.emit('dialogue-finished');
+    if (callback) callback();
   }
 
   public playState(state: AgataAnimState): void {
@@ -180,6 +190,12 @@ export class AgataGuide {
       duration: 300,
       yoyo: true,
       ease: 'Cubic.easeOut',
+      onUpdate: () => {
+        if (this.currentNodeId) {
+           const anchor = this.getBubbleAnchor();
+           this.bubble.setPosition(anchor.x, anchor.y, anchor.maxWidth);
+        }
+      },
       onComplete: () => {
         this.sprite.play('agata-idle-anim');
         this.sprite.setY(0);
@@ -198,6 +214,12 @@ export class AgataGuide {
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
+      onUpdate: () => {
+        if (this.currentNodeId) {
+           const anchor = this.getBubbleAnchor();
+           this.bubble.setPosition(anchor.x, anchor.y, anchor.maxWidth);
+        }
+      }
     });
   }
 
@@ -222,15 +244,8 @@ export class AgataGuide {
 
   private getBubbleAnchor(): { x: number; y: number; maxWidth: number } {
     const pos = getAgataNpcPosition(this.scene.scale, this.zones);
-    // En móvil la burbuja va arriba del área de juego para no tapar a Ágata ni los portales/marcas
-    if (this.zones.isMobile) {
-      return {
-        x: this.scene.scale.width / 2,
-        y: this.zones.playArea.y + 8,
-        maxWidth: this.scene.scale.width * 0.92,
-      };
-    }
-    const headY = this.root.y - this.sprite.displayHeight - 5;
+    // Ahora en móvil también flota sobre su cabeza
+    const headY = this.root.y + (this.sprite.y * this.root.scaleY) - (this.sprite.displayHeight) - 5;
     return {
       x: this.root.x,
       y: headY,
