@@ -27,6 +27,7 @@ export class Portal {
   private readonly icon: Phaser.GameObjects.Image;
   private readonly label: Phaser.GameObjects.Text;
   private readonly counter: Phaser.GameObjects.Text;
+  private checkmark: Phaser.GameObjects.Text | null = null;
   private pulseTween: Phaser.Tweens.Tween | null = null;
 
   constructor(
@@ -83,15 +84,17 @@ export class Portal {
     this.container.setSize(120, 120);
 
     const hitbox = scene.add.circle(0, 0, HIT_RADIUS, 0x000000, 0);
-    hitbox.setInteractive({ useHandCursor: !config.locked });
+    this.container.add(hitbox);
+
     if (!config.locked) {
+      hitbox.setInteractive({ useHandCursor: true });
       hitbox.on('pointerdown', () => {
+        if (this.config.locked) return;
         this.popSelect();
         this.scene.events.emit('portal-clicked', config.id);
       });
       hitbox.on('pointerover', () => this.popHover());
     }
-    this.container.add(hitbox);
 
     scene.tweens.add({
       targets: this.container,
@@ -145,10 +148,35 @@ export class Portal {
     this.label.setText(`${this.config.label}\n(Próximamente)`);
   }
 
-  public setCompleted(completed: number): void {
-    this.counter.setText(`${completed}/3`);
-    if (completed === 3) {
-      this.outerRing.setStrokeStyle(4, this.config.glowColor, 1);
+  public setCompleted(isCompleted: boolean): void {
+    if (!isCompleted) return;
+
+    this.config.locked = true;
+    this.counter.setVisible(false);
+    this.pulseTween?.stop();
+    this.outerRing.setScale(1);
+    this.outerRing.setStrokeStyle(3, 0x44ff44, 0.8);
+    this.innerGlow.setFillStyle(0x44ff44, 0.15);
+    this.icon.setAlpha(0.6);
+
+    // Añadir checkmark
+    if (!this.checkmark) {
+      this.checkmark = this.scene.add.text(0, 78, '✓ COMPLETADO', {
+        fontSize: '11px',
+        fontFamily: 'Montserrat, system-ui, sans-serif',
+        color: '#44ff44',
+        fontStyle: 'bold',
+        stroke: '#000000',
+        strokeThickness: 2,
+      });
+      this.checkmark.setOrigin(0.5, 0.5);
+      this.container.add(this.checkmark);
+    }
+
+    // Desactivar interactividad
+    const hitbox = this.container.list.find(obj => obj instanceof Phaser.GameObjects.Arc && obj.input) as Phaser.GameObjects.Arc;
+    if (hitbox) {
+      hitbox.disableInteractive();
     }
   }
 

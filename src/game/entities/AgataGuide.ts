@@ -165,12 +165,24 @@ export class AgataGuide {
 
   private endDialogue(): void {
     const callback = (this.activeDialogue as any)?._onFinished;
+    const isBrandDialogue = !!this.activeBrandId;
+    const lastNodeId = this.currentNodeId;
+
     this.bubble.hide();
     this.activeDialogue = null;
     this.currentNodeId = null;
     this.activeBrandId = null;
     this.playState('idle');
     EventBus.emit('dialogue-finished');
+
+    // Si terminó una marca en RoomScene, avisar de pilar completado
+    if (isBrandDialogue && this.scene.scene.key === 'RoomScene' && (lastNodeId === 'end' || lastNodeId === 'exit')) {
+      const pillarId = (this.scene as any).pillarId;
+      if (pillarId) {
+        EventBus.emit('pillar-completed', pillarId);
+      }
+    }
+
     if (callback) callback();
   }
 
