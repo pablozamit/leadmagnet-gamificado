@@ -53,33 +53,34 @@ export class HubScene extends Phaser.Scene {
 
   private createDecor(zones: ReturnType<typeof getSafeZones>): void {
     const { width, height } = this.scale;
-    const count = zones.isMobile ? 3 : 5;
 
-    for (let i = 0; i < count; i++) {
-      const x = Phaser.Math.Between(this.playBounds.x, width - 24);
-      const y = Phaser.Math.Between(this.playBounds.y, height - 60);
-      const platform = this.add.rectangle(x, y, 60, 10, 0x1a1a3a, 0.35);
-      platform.setStrokeStyle(1, 0x3a3a6a, 0.4);
-      this.tweens.add({
-        targets: platform,
-        y: y - 12,
-        alpha: 0.55,
-        duration: 2500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
-      this.decor.push(platform);
-    }
-
+    // Ocultar plataformas decorativas en móvil
     if (!zones.isMobile) {
-      const hint = this.add.text(width / 2, this.playBounds.y - 8, 'Pulsa el pilar donde quieras empezar', {
-        fontSize: '13px',
-        fontFamily: 'Montserrat, system-ui, sans-serif',
-        color: '#888888',
-      });
-      hint.setOrigin(0.5, 1);
-      this.decor.push(hint);
+        const count = 5;
+        for (let i = 0; i < count; i++) {
+          const x = Phaser.Math.Between(this.playBounds.x, width - 24);
+          const y = Phaser.Math.Between(this.playBounds.y, height - 60);
+          const platform = this.add.rectangle(x, y, 60, 10, 0x1a1a3a, 0.35);
+          platform.setStrokeStyle(1, 0x3a3a6a, 0.4);
+          this.tweens.add({
+            targets: platform,
+            y: y - 12,
+            alpha: 0.55,
+            duration: 2500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+          this.decor.push(platform);
+        }
+
+        const hint = this.add.text(width / 2, this.playBounds.y - 8, 'Pulsa el pilar donde quieras empezar', {
+          fontSize: '13px',
+          fontFamily: 'Montserrat, system-ui, sans-serif',
+          color: '#888888',
+        });
+        hint.setOrigin(0.5, 1);
+        this.decor.push(hint);
     }
   }
 
@@ -100,12 +101,28 @@ export class HubScene extends Phaser.Scene {
   };
 
   private handlePortalClick(pillarId: PillarId): void {
-    this.agata?.forceEndDialogue();
-    this.enterPortal(pillarId);
+    if (this.agata?.isDialogueBlocking()) return;
+
+    this.agata?.playState('jump');
+
+    const farewell: any = {
+      startNodeId: 'farewell',
+      nodes: {
+        farewell: {
+          id: 'farewell',
+          speaker: 'agata',
+          text: '¡Buena elección! Vamos a descubrir qué sorpresas nos esperan allí.',
+          nextId: 'end'
+        }
+      }
+    };
+
+    this.agata?.playDialogue(farewell, undefined, () => {
+        this.enterPortal(pillarId);
+    });
   }
 
   private enterPortal(pillarId: PillarId): void {
-    EventBus.emit('dialogue-finished');
     EventBus.emit('portal-entered', pillarId);
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {

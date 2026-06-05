@@ -11,7 +11,6 @@ export interface SafeZones {
 
 /** Margen interno del canvas (HUD va fuera del canvas en flex). */
 const PLAY_MARGIN = 12;
-const AGATA_LANE_RATIO = 0.38;
 
 export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const w = scale.width;
@@ -23,12 +22,12 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   /** HUD en React encima del canvas: el juego ya no reserva píxeles extra arriba. */
   const hudTop = 0;
   // En móvil, Ágata ocupa una porción más clara de la izquierda
-  const agataLaneWidth = Math.round(w * (isMobile ? 0.42 : 0.28));
+  const agataLaneWidth = Math.round(w * (isMobile ? 0.35 : 0.28));
 
   const playArea = new Phaser.Geom.Rectangle(
-    agataLaneWidth + (isMobile ? 0 : PLAY_MARGIN),
+    agataLaneWidth + (isMobile ? 10 : PLAY_MARGIN),
     PLAY_MARGIN,
-    w - agataLaneWidth - PLAY_MARGIN,
+    w - agataLaneWidth - (isMobile ? 20 : PLAY_MARGIN),
     h - PLAY_MARGIN * 2,
   );
 
@@ -41,15 +40,13 @@ export function getPillarStationPositions(
   count: number,
 ): Array<{ x: number; y: number }> {
   if (count <= 0) return [];
-  const cols = Math.min(count, 3);
-  const rows = Math.ceil(count / cols);
+  const cols = 1; // Solo una columna para marcas en texto
+  const rows = count;
   const out: Array<{ x: number; y: number }> = [];
   for (let i = 0; i < count; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
     out.push({
-      x: playArea.x + playArea.width * ((col + 1) / (cols + 1)),
-      y: playArea.y + playArea.height * (0.38 + (row / Math.max(rows, 1)) * 0.28),
+      x: playArea.x + playArea.width * 0.5,
+      y: playArea.y + playArea.height * (0.3 + (i / Math.max(rows - 1, 1)) * 0.45),
     });
   }
   return out;
@@ -63,23 +60,23 @@ export function getAgataNpcPosition(
   zones: SafeZones,
 ): { x: number; y: number; scale: number; bubbleMaxWidth: number } {
   const targetHeight = zones.isMobile
-    ? Math.min(scale.height * 0.38, 280)
+    ? Math.min(scale.height * 0.35, 240)
     : Math.min(scale.height * 0.42, 340);
 
   const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
 
   // Posición: izquierda, apoyada en el fondo
   const x = zones.isMobile
-    ? zones.agataLaneWidth * 0.55
+    ? zones.agataLaneWidth * 0.45
     : zones.agataLaneWidth * 0.52;
 
-  const y = scale.height - (zones.isMobile ? 25 : 40);
+  const y = scale.height - (zones.isMobile ? 20 : 40);
 
   return {
     x,
     y,
     scale: spriteScale,
-    bubbleMaxWidth: zones.isMobile ? scale.width * 0.78 : 340,
+    bubbleMaxWidth: zones.isMobile ? scale.width * 0.8 : 340,
   };
 }
 
@@ -87,35 +84,17 @@ export function getAgataNpcPosition(
 export function getHubPortalPositions(
   playArea: Phaser.Geom.Rectangle,
 ): Array<{ x: number; y: number }> {
-  const isMobile = playArea.x > 50; // Heuristic: if agataLaneWidth is large, it's mobile
-
-  if (isMobile) {
-    // Cuadrícula 2x2 para móvil con más espacio vertical para Ágata y burbuja
-    const cols = [0.22, 0.78];
-    const rows = [0.24, 0.58]; // Bajamos un poco los portales superiores y subimos los inferiores
-    const out: Array<{ x: number; y: number }> = [];
-    for (const row of rows) {
-      for (const col of cols) {
-        out.push({
-          x: playArea.x + playArea.width * col,
-          y: playArea.y + playArea.height * row,
-        });
-      }
+  // Cuadrícula 2x2
+  const cols = [0.28, 0.72];
+  const rows = [0.32, 0.68];
+  const out: Array<{ x: number; y: number }> = [];
+  for (const row of rows) {
+    for (const col of cols) {
+      out.push({
+        x: playArea.x + playArea.width * col,
+        y: playArea.y + playArea.height * row,
+      });
     }
-    return out;
-  } else {
-    // Desktop layout original (o similar)
-    const cols = [0.32, 0.72];
-    const rows = [0.35, 0.68];
-    const out: Array<{ x: number; y: number }> = [];
-    for (const row of rows) {
-      for (const col of cols) {
-        out.push({
-          x: playArea.x + playArea.width * col,
-          y: playArea.y + playArea.height * row,
-        });
-      }
-    }
-    return out;
   }
+  return out;
 }
