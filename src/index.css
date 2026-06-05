@@ -1505,7 +1505,180 @@
   display: block;
 }
 
-/* HUD progress bar */
+/* HUD compacto (hub / pilar) */
+.fi-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: none;
+  padding: max(10px, env(safe-area-inset-top, 0px)) 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 30, 0.97) 0%,
+    rgba(10, 10, 30, 0.82) 55%,
+    rgba(10, 10, 30, 0) 100%
+  );
+}
+
+.fi-hud__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.fi-hud__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.fi-hud__title {
+  font-family: var(--fi-font-serif);
+  font-size: clamp(16px, 4.5vw, 22px);
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.2;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fi-hud__subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 4px 0 0;
+  letter-spacing: 0.04em;
+}
+
+.fi-hud__stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fi-hud__percent {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fi-gold);
+  line-height: 1;
+}
+
+.fi-hud__frases {
+  font-size: 11px;
+  color: #c4b5fd;
+  white-space: nowrap;
+}
+
+.fi-hud__bar-track {
+  height: 5px;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fi-hud__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fi-purple), var(--fi-gold));
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(246, 160, 0, 0.35);
+}
+
+.fi-hud__pillars {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.fi-hud__pillar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fi-hud__pillar--active {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 16px rgba(246, 160, 0, 0.35);
+  transform: scale(1.06);
+}
+
+.fi-hud__pillar-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .fi-hud {
+    padding: max(8px, env(safe-area-inset-top, 0px)) 12px 10px;
+    gap: 10px;
+  }
+
+  .fi-hud__top {
+    gap: 12px;
+  }
+
+  .fi-hud__subtitle {
+    display: none;
+  }
+
+  .fi-hud__title {
+    font-size: 15px;
+  }
+
+  .fi-hud__percent {
+    font-size: 16px;
+  }
+
+  .fi-hud__frases {
+    font-size: 10px;
+  }
+
+  .fi-hud__pillars {
+    gap: 12px;
+    padding-top: 2px;
+  }
+
+  .fi-hud__pillar {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 12px;
+  }
+
+  .fi-hud__pillar-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* HUD progress bar (legacy) */
 .fi-hud-progress {
   position: absolute;
   top: 0;

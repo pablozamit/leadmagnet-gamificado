@@ -1,99 +1,140 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
-import { Agata } from '../entities/Agata';
+import { AgataGuide } from '../entities/AgataGuide';
 import { EventBus } from '../EventBus';
 import type { Brand } from '../../data/brandData';
+import { getSafeZones } from '../utils/layout';
 
 export class RoomScene extends Phaser.Scene {
   private player!: Player;
-  private agata!: Agata;
+  private agata: AgataGuide | null = null;
   private brand!: Brand;
   private pillarId!: string;
+  private playBounds = new Phaser.Geom.Rectangle(0, 0, 0, 0);
+  private exitHint: Phaser.GameObjects.Text | null = null;
 
   constructor() {
     super({ key: 'RoomScene' });
   }
 
-  init(data: { brand: Brand, pillarId: string }): void {
+  init(data: { brand: Brand; pillarId: string }): void {
     this.brand = data.brand;
     this.pillarId = data.pillarId;
   }
 
   create(): void {
-    const { width, height } = this.scale;
+    const zones = getSafeZones(this.scale);
+    this.playBounds = zones.playArea;
 
-    this.createBackground(width, height);
-    this.createAgata(width, height);
-    this.createPlayer(width, height);
+    this.createRoomDecor(zones);
+    this.createPlayer();
+    this.createBackControl(zones);
 
-    this.cameras.main.setBackgroundColor('#050510');
-    this.cameras.main.fadeIn(500, 0, 0, 0);
-
-    EventBus.emit('current-scene-ready', this);
-
-    // Start dialogue automatically
-    this.time.delayedCall(800, () => {
-      this.agata.show();
+    this.agata = new AgataGuide(this);
+    this.time.delayedCall(600, () => {
+      this.agata?.showCharacter();
       EventBus.emit('start-brand-dialogue', this.brand.id);
     });
 
-    // Listen for dialogue end to offer exit
-    EventBus.on('dialogue-finished', this.handleDialogueEnd, this);
+    EventBus.on('dialogue-finished', this.onDialogueFinished, this);
     EventBus.on('dialogue-exit-request', this.exitRoom, this);
 
-    this.events.once('shutdown', () => {
-      EventBus.off('dialogue-finished', this.handleDialogueEnd, this);
-      EventBus.off('dialogue-exit-request', this.exitRoom, this);
-    });
+    this.cameras.main.setBackgroundColor('#050510');
+    this.cameras.main.fadeIn(500, 0, 0, 0);
+    this.scale.on('resize', this.onResize, this);
+
+    EventBus.emit('current-scene-ready', this);
+    EventBus.emit('brand-selected', this.brand);
   }
 
-  private createBackground(width: number, height: number): void {
-    // Room title
-    const title = this.add.text(width / 2, 50, `SALA DE ${this.brand.name.toUpperCase()}`, {
-      fontSize: '28px',
-      fontFamily: 'system-ui, sans-serif',
-      color: '#ffffff',
-      fontStyle: 'bold',
-    }).setOrigin(0.5, 0.5);
+  private createRoomDecor(zones: ReturnType<typeof getSafeZones>): void {
+    const { width } = this.scale;
+    if (!zones.isMobile) {
+      this.add
+        .text(width / 2, zones.hudTop + 6, this.brand.name, {
+          fontSize: '13px',
+          fontFamily: 'Montserrat, system-ui, sans-serif',
+          color: '#aaaaaa',
+        })
+        .setOrigin(0.5, 0);
+    }
 
-    // Decorative "screens" or elements
-    for(let i=0; i<3; i++) {
-        const x = (width / 4) * (i + 1);
-        const y = height * 0.4;
-        const rect = this.add.rectangle(x, y, 120, 160, 0x1a1a3a, 0.5);
-        rect.setStrokeStyle(2, 0x3a3a6a, 1);
-
-        this.tweens.add({
-            targets: rect,
-            alpha: 0.8,
-            duration: 2000 + (i * 500),
-            yoyo: true,
-            repeat: -1
-        });
+    const slots = 3;
+    for (let i = 0; i < slots; i++) {
+      const x = this.playBounds.x + (this.playBounds.width / (slots + 1)) * (i + 1);
+      const y = this.playBounds.y + this.playBounds.height * 0.42;
+      const rect = this.add.rectangle(x, y, 100, 130, 0x1a1a3a, 0.45);
+      rect.setStrokeStyle(2, 0x3a3a6a, 0.8);
+      this.tweens.add({
+        targets: rect,
+        alpha: 0.75,
+        duration: 2000 + i * 400,
+        yoyo: true,
+        repeat: -1,
+      });
     }
   }
 
-  private createAgata(width: number, height: number): void {
-    this.agata = new Agata(this, width * 0.5, height * 0.35);
+  private createPlayer(): void {
+    const x = this.playBounds.x + this.playBounds.width * 0.58;
+    const y = Math.min(this.scale.height * 0.8, this.playBounds.bottom - 24);
+    this.player = new Player(this, x, y);
   }
 
-  private createPlayer(width: number, height: number): void {
-    this.player = new Player(this, width / 2, height * 0.8);
+  private createBackControl(zones: ReturnType<typeof getSafeZones>): void {
+    const y = zones.hudTop + (zones.isMobile ? 4 : 10);
+    const btn = this.add
+      .text(this.playBounds.right - 8, y, '← Pilar', {
+        fontSize: '13px',
+        fontFamily: 'Montserrat, system-ui, sans-serif',
+        color: '#fff',
+        backgroundColor: '#00000088',
+        padding: { x: 10, y: 6 },
+      })
+      .setOrigin(1, 0)
+      .setDepth(70)
+      .setInteractive({ useHandCursor: true });
+    btn.on('pointerdown', () => this.exitRoom());
+
+    this.exitHint = this.add
+      .text(this.playBounds.centerX, this.playBounds.bottom - 12, '', {
+        fontSize: '12px',
+        color: '#888',
+        fontFamily: 'Montserrat, system-ui, sans-serif',
+      })
+      .setOrigin(0.5, 1)
+      .setVisible(false);
   }
 
-  private handleDialogueEnd(): void {
-    // Logic after a simple dialogue box closes
-  }
+  private onDialogueFinished = (): void => {
+    if (this.exitHint) {
+      this.exitHint.setText('Pulsa ← Pilar para volver');
+      this.exitHint.setVisible(true);
+    }
+  };
 
-  private exitRoom(): void {
+  private onResize = (): void => {
+    const zones = getSafeZones(this.scale);
+    this.playBounds = zones.playArea;
+  };
+
+  private exitRoom = (): void => {
+    EventBus.emit('dialogue-finished');
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('PillarScene', { pillarId: this.pillarId });
+      this.scene.start('PillarScene', { pillarId: this.pillarId });
     });
-  }
+  };
 
   update(_time: number, delta: number): void {
-    const bounds = new Phaser.Geom.Rectangle(40, 100, this.scale.width - 80, this.scale.height - 150);
-    this.player.update(delta, bounds);
+    this.player.update(delta, this.playBounds);
+  }
+
+  shutdown(): void {
+    EventBus.off('dialogue-finished', this.onDialogueFinished, this);
+    EventBus.off('dialogue-exit-request', this.exitRoom, this);
+    this.scale.off('resize', this.onResize, this);
+    this.agata?.destroy();
+    this.agata = null;
   }
 }

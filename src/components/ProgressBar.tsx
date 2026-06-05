@@ -9,7 +9,7 @@ interface ProgressBarProps {
 }
 
 /**
- * `ProgressBar` - HUD superior con iconos de los 4 pilares.
+ * HUD compacto: título + progreso + 4 pilares sin aglomerar (móvil-first).
  */
 export default function ProgressBar({
   completedPillars,
@@ -20,58 +20,50 @@ export default function ProgressBar({
   const percentage = Math.round((completedPillars / totalPillars) * 100);
 
   return (
-    <motion.div
-      className="fi-hud-progress"
-      initial={{ y: -50, opacity: 0 }}
+    <motion.header
+      className="fi-hud"
+      initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
+      transition={{ duration: 0.45 }}
     >
-      <div className="fi-hud-progress-row">
-        <div className="fi-hud-progress-label">
-          <span className="fi-hud-progress-text">Misión</span>
-          <span className="fi-hud-progress-percentage">{percentage}%</span>
+      <div className="fi-hud__top">
+        <div className="fi-hud__title-block">
+          <h1 className="fi-hud__title">Museo de la Dinamización</h1>
+          <p className="fi-hud__subtitle">4 pilares · experiencia guiada</p>
         </div>
-        <div className="fi-hud-progress-bar">
-          <motion.div
-            className="fi-hud-progress-fill"
-            initial={{ width: 0 }}
-            animate={{ width: `${percentage}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-          />
+        <div className="fi-hud__stats">
+          <span className="fi-hud__percent">{percentage}%</span>
+          <span className="fi-hud__frases">{frasesClaveCount} frases</span>
         </div>
       </div>
 
-      <div className="fi-hud-pillars">
+      <div className="fi-hud__bar-track" aria-hidden>
+        <motion.div
+          className="fi-hud__bar-fill"
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        />
+      </div>
+
+      <nav className="fi-hud__pillars" aria-label="Pilares de la misión">
         {PILLAR_ORDER.map((id) => {
           const p = PILLAR_ASSETS[id];
           const isActive = currentPillar === id;
           return (
-            <motion.div
+            <div
               key={p.id}
-              className={`fi-hud-pillar ${isActive ? 'fi-hud-pillar--active' : ''}`}
+              className={`fi-hud__pillar ${isActive ? 'fi-hud__pillar--active' : ''}`}
               style={{
                 borderColor: `#${(p.color & 0xffffff).toString(16).padStart(6, '0')}`,
               }}
-              animate={isActive ? { scale: [1, 1.06, 1] } : {}}
-              transition={isActive ? { duration: 1.5, repeat: Infinity } : {}}
+              title={p.label}
             >
-              <img
-                src={p.icon}
-                alt={p.label}
-                className="fi-hud-pillar-icon"
-                width={32}
-                height={32}
-              />
-              <span className="fi-hud-pillar-label">{p.label.slice(0, 5)}</span>
-            </motion.div>
+              <img src={p.icon} alt="" className="fi-hud__pillar-icon" width={40} height={40} />
+            </div>
           );
         })}
-      </div>
-
-      <div className="fi-hud-frases">
-        <span className="fi-hud-frases-icon">✨</span>
-        <span className="fi-hud-frases-text">{frasesClaveCount} frases</span>
-      </div>
-    </motion.div>
+      </nav>
+    </motion.header>
   );
 }

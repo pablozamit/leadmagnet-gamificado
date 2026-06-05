@@ -1,7 +1,11 @@
+/**
+ * @deprecated Diálogo de Ágata vive en Phaser (`AgataGuide` + `AgataSpeechBubble`).
+ * No montar en App — evita duplicar burbujas desconectadas del sprite.
+ */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EventBus } from '../game/EventBus';
-import { hubIntroDialogue, brandDialogues, type DialogueNode, type BrandDialogue } from '../data/dialogueData';
+import { hubIntroDialogue, brandDialogues, type BrandDialogue } from '../data/dialogueData';
 
 export default function DialogueOverlay() {
   const [activeDialogue, setActiveDialogue] = useState<BrandDialogue | null>(null);

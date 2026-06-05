@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import PhaserGame, { type IRefPhaserGame } from './components/PhaserGame';
 import MissionIntro from './components/MissionIntro';
 import ProgressBar from './components/ProgressBar';
-import DialogueOverlay from './components/DialogueOverlay';
+
 import { EventBus } from './game/EventBus';
 import { loadProgress, saveProgress, type GameProgress } from './game/utils/storage';
 import type { Brand } from './data/brandData';
@@ -75,9 +75,14 @@ export default function App() {
     };
 
     const onSceneReady = (scene: Phaser.Scene): void => {
-      // Si entramos al hub y no estamos en pillar, no hacemos nada especial
-      // La escena ya está corriendo por su cuenta.
-      void scene;
+      const key = scene.scene.key;
+      if (key === 'HubScene') {
+        setPhase('hub');
+        setCurrentPillar(null);
+        setActiveBrand(null);
+      } else if (key === 'PillarScene') {
+        setPhase('pillar');
+      }
     };
 
     EventBus.on('portal-entered', onPortalEntered);
@@ -118,15 +123,12 @@ export default function App() {
       {(phase === 'hub' || phase === 'pillar') && (
         <div className="fi-game-stage">
           <PhaserGame ref={gameRef} />
-          {(phase === 'hub' || phase === 'pillar') && (
-            <ProgressBar
-              completedPillars={completedPillars}
-              totalPillars={4}
-              currentPillar={currentPillar}
-              frasesClaveCount={progress?.frasesClave.length ?? 0}
-            />
-          )}
-          <DialogueOverlay />
+          <ProgressBar
+            completedPillars={completedPillars}
+            totalPillars={4}
+            currentPillar={currentPillar}
+            frasesClaveCount={progress?.frasesClave.length ?? 0}
+          />
         </div>
       )}
 

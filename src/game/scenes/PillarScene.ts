@@ -1,22 +1,25 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
-import { Agata } from '../entities/Agata';
+import { AgataGuide } from '../entities/AgataGuide';
 import { EventBus } from '../EventBus';
 import { pillars, type PillarData, type Brand } from '../../data/brandData';
+import { getSafeZones, getPillarStationPositions } from '../utils/layout';
 
 export class PillarScene extends Phaser.Scene {
   private player!: Player;
-  private agata!: Agata;
+  private agata: AgataGuide | null = null;
   private pillarData!: PillarData;
   private stations: Phaser.GameObjects.Container[] = [];
   private hintText: Phaser.GameObjects.Text | null = null;
+  private playBounds = new Phaser.Geom.Rectangle(0, 0, 0, 0);
+  private decor: Phaser.GameObjects.GameObject[] = [];
 
   constructor() {
     super({ key: 'PillarScene' });
   }
 
   init(data: { pillarId: string }): void {
-    const found = pillars.find(p => p.id === data.pillarId);
+    const found = pillars.find((p) => p.id === data.pillarId);
     if (!found) {
       this.scene.start('HubScene');
       return;
@@ -25,150 +28,202 @@ export class PillarScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { width, height } = this.scale;
+    const zones = getSafeZones(this.scale);
+    this.playBounds = zones.playArea;
 
-    this.createBackground(width, height);
-    this.createStations(width, height);
-    this.createAgata(width, height);
-    this.createPlayer(width, height);
-    this.createHint();
+    this.createDecor(zones);
+    this.createStations();
+    this.createPlayer(zones.isCoarsePointer);
+    this.createHint(zones.isCoarsePointer);
+    this.createBackButton(zones);
 
-    this.cameras.main.setBackgroundColor('#0a1428');
-    this.cameras.main.fadeIn(500, 0, 0, 0);
-
-    this.player.onInteract(() => this.handleInteract());
-
-    // Back button (procedural)
-    const backBtn = this.add.text(20, 20, '← Volver al Museo', {
-      fontSize: '16px',
-      color: '#ffffff',
-      backgroundColor: '#00000066',
-      padding: { x: 10, y: 5 }
-    }).setInteractive({ useHandCursor: true });
-    backBtn.on('pointerdown', () => {
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('HubScene');
-      });
-    });
-
-    EventBus.emit('current-scene-ready', this);
-
-    // Agata welcomes the player to the pillar
+    this.agata = new AgataGuide(this);
     this.time.delayedCall(500, () => {
-      this.agata.show();
+      this.agata?.showCharacter();
       EventBus.emit('start-pillar-intro', this.pillarData.name);
     });
 
-    this.events.once('shutdown', () => {
-        // Cleanup if needed
+    this.cameras.main.setBackgroundColor('#0a1428');
+    this.cameras.main.fadeIn(500, 0, 0, 0);
+    this.player.onInteract(() => this.handleInteract());
+    this.scale.on('resize', this.onResize, this);
+
+    EventBus.emit('current-scene-ready', this);
+    EventBus.emit('pillar-progress-updated', {
+      pillar: this.pillarData.id,
+      completed: 0,
+      total: this.pillarData.brands.length,
     });
   }
 
-  private createBackground(width: number, height: number): void {
-    const title = this.add.text(width / 2, 50, `PILAR: ${this.pillarData.name}`, {
-      fontSize: '24px',
-      fontFamily: 'system-ui, sans-serif',
-      color: Phaser.Display.Color.IntegerToColor(this.pillarData.glowColor).rgba,
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 4,
-    });
-    title.setOrigin(0.5, 0.5);
+  private createDecor(zones: ReturnType<typeof getSafeZones>): void {
+    if (!zones.isMobile) {
+      const title = this.add.text(
+        this.scale.width / 2,
+        zones.hudTop + 8,
+        this.pillarData.name.toUpperCase(),
+        {
+          fontSize: '14px',
+          fontFamily: 'Montserrat, system-ui, sans-serif',
+          color: Phaser.Display.Color.IntegerToColor(this.pillarData.glowColor).rgba,
+          fontStyle: 'bold',
+        },
+      );
+      title.setOrigin(0.5, 0);
+      title.setAlpha(0.65);
+      this.decor.push(title);
+    }
   }
 
-  private createStations(width: number, height: number): void {
-    const spacing = width / (this.pillarData.brands.length + 1);
+  private createStations(): void {
+    const positions = getPillarStationPositions(
+      this.playBounds,
+      this.pillarData.brands.length,
+    );
 
     this.pillarData.brands.forEach((brand, i) => {
-      const x = spacing * (i + 1);
-      const y = height * 0.5;
-
+      const { x, y } = positions[i];
       const station = this.add.container(x, y);
 
-      const glow = this.add.circle(0, 0, 45, this.pillarData.color, 0.2);
-      station.add(glow);
-
-      const body = this.add.rectangle(0, 0, 70, 70, 0x1a4ba0, 0.8);
+      const glow = this.add.circle(0, 0, 42, this.pillarData.color, 0.2);
+      const body = this.add.rectangle(0, 0, 64, 64, 0x1a4ba0, 0.85);
       body.setStrokeStyle(3, this.pillarData.glowColor, 1);
-      station.add(body);
+      const name = this.add
+        .text(0, 48, brand.name, {
+          fontSize: '13px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          fontFamily: 'Montserrat, system-ui, sans-serif',
+          stroke: '#000000',
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5, 0);
 
-      const name = this.add.text(0, 55, brand.name, {
-        fontSize: '16px',
-        fontStyle: 'bold',
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 3
-      }).setOrigin(0.5, 0);
-      station.add(name);
-
+      station.add([glow, body, name]);
       station.setData('brand', brand);
+      station.setSize(80, 100);
       this.stations.push(station);
 
       this.tweens.add({
         targets: glow,
-        scale: 1.2,
-        alpha: 0.1,
-        duration: 1500 + (i * 200),
+        scale: 1.15,
+        alpha: 0.08,
+        duration: 1500 + i * 200,
         yoyo: true,
         repeat: -1,
-        ease: 'Sine.easeInOut'
+        ease: 'Sine.easeInOut',
       });
     });
   }
 
-  private createAgata(width: number, height: number): void {
-    this.agata = new Agata(this, width * 0.15, height * 0.3);
+  private createPlayer(isCoarsePointer: boolean): void {
+    const x = this.playBounds.x + this.playBounds.width * 0.5;
+    const y = Math.min(this.scale.height * 0.82, this.playBounds.bottom - 28);
+    this.player = new Player(this, x, y);
+    void isCoarsePointer;
   }
 
-  private createPlayer(width: number, height: number): void {
-    this.player = new Player(this, width / 2, height * 0.85);
+  private interactLabel = 'Explorar (E)';
+
+  private createHint(isCoarsePointer: boolean): void {
+    this.interactLabel = isCoarsePointer ? 'Toca la marca' : 'Explorar (E)';
+    this.hintText = this.add
+      .text(0, 0, '', {
+        fontSize: '14px',
+        fontFamily: 'Montserrat, system-ui, sans-serif',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#00000099',
+        padding: { x: 12, y: 6 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(60)
+      .setVisible(false);
   }
 
-  private createHint(): void {
-    this.hintText = this.add.text(0, 0, '', {
-      fontSize: '16px',
-      color: '#ffffff',
-      backgroundColor: '#00000088',
-      padding: { x: 12, y: 6 },
-    }).setOrigin(0.5, 1).setVisible(false);
+  private createBackButton(zones: ReturnType<typeof getSafeZones>): void {
+    const y = zones.hudTop + (zones.isMobile ? 4 : 12);
+    const backBtn = this.add
+      .text(this.playBounds.right - 8, y, '← Museo', {
+        fontSize: zones.isMobile ? '13px' : '15px',
+        fontFamily: 'Montserrat, system-ui, sans-serif',
+        color: '#ffffff',
+        backgroundColor: '#00000088',
+        padding: { x: 10, y: 6 },
+      })
+      .setOrigin(1, 0)
+      .setDepth(70)
+      .setInteractive({ useHandCursor: true });
+    backBtn.on('pointerdown', () => this.returnToHub());
   }
+
+  private onResize = (): void => {
+    const zones = getSafeZones(this.scale);
+    this.playBounds = zones.playArea;
+    const positions = getPillarStationPositions(
+      this.playBounds,
+      this.pillarData.brands.length,
+    );
+    this.stations.forEach((station, i) => {
+      station.setPosition(positions[i].x, positions[i].y);
+    });
+  };
 
   private handleInteract(): void {
+    if (this.agata?.isDialogueBlocking()) return;
     const pos = this.player.getPosition();
     for (const station of this.stations) {
-      const distance = Phaser.Math.Distance.Between(pos.x, pos.y, station.x, station.y);
-      if (distance < 80) {
-        const brand = station.getData('brand') as Brand;
-        this.enterRoom(brand);
+      if (Phaser.Math.Distance.Between(pos.x, pos.y, station.x, station.y) < 88) {
+        this.enterRoom(station.getData('brand') as Brand);
         return;
       }
     }
   }
 
   private enterRoom(brand: Brand): void {
+    EventBus.emit('dialogue-finished');
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('RoomScene', { brand, pillarId: this.pillarData.id });
     });
   }
 
-  update(_time: number, delta: number): void {
-    const bounds = new Phaser.Geom.Rectangle(40, 100, this.scale.width - 80, this.scale.height - 150);
-    this.player.update(delta, bounds);
+  private returnToHub(): void {
+    EventBus.emit('dialogue-finished');
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('HubScene');
+    });
+  }
 
-    let nearAny = false;
+  update(_time: number, delta: number): void {
+    this.player.update(delta, this.playBounds);
+
+    if (this.agata?.isDialogueBlocking() || !this.hintText) {
+      this.hintText?.setVisible(false);
+      return;
+    }
+    let near: Phaser.GameObjects.Container | null = null;
     const pos = this.player.getPosition();
     for (const station of this.stations) {
-      const dist = Phaser.Math.Distance.Between(pos.x, pos.y, station.x, station.y);
-      if (dist < 80) {
-        this.hintText?.setText(`Explorar ${station.getData('brand').name} (E)`);
-        this.hintText?.setPosition(station.x, station.y - 60);
-        this.hintText?.setVisible(true);
-        nearAny = true;
+      if (Phaser.Math.Distance.Between(pos.x, pos.y, station.x, station.y) < 88) {
+        near = station;
         break;
       }
     }
-    if (!nearAny) this.hintText?.setVisible(false);
+    if (near) {
+      const brand = near.getData('brand') as Brand;
+      this.hintText.setText(`${this.interactLabel}: ${brand.name}`);
+      this.hintText.setPosition(near.x, near.y - 72);
+      this.hintText.setVisible(true);
+    } else {
+      this.hintText.setVisible(false);
+    }
+  }
+
+  shutdown(): void {
+    this.scale.off('resize', this.onResize, this);
+    this.agata?.destroy();
+    this.agata = null;
   }
 }

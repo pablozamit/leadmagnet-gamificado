@@ -7,16 +7,14 @@ import { getSafeZones, getHubPortalPositions } from '../utils/layout';
 import { PILLAR_ORDER } from '../../data/pillarAssets';
 
 /**
- * `HubScene` - Museo con 4 portales, iconos PNG y Ágata guía.
+ * Hub del museo: Ágata NPC a la izquierda, portales a la derecha, sin título duplicado en móvil.
  */
 export class HubScene extends Phaser.Scene {
   private player!: Player;
   private portals: Portal[] = [];
   private agata: AgataGuide | null = null;
-  private backgroundElements: Phaser.GameObjects.GameObject[] = [];
+  private decor: Phaser.GameObjects.GameObject[] = [];
   private hintText: Phaser.GameObjects.Text | null = null;
-  private titleText: Phaser.GameObjects.Text | null = null;
-  private subtitleText: Phaser.GameObjects.Text | null = null;
   private playBounds = new Phaser.Geom.Rectangle(0, 0, 0, 0);
   private introStarted = false;
 
@@ -25,18 +23,17 @@ export class HubScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { width, height } = this.scale;
     const zones = getSafeZones(this.scale);
     this.playBounds = zones.playArea;
 
-    this.createBackground(width, height, zones.isMobile);
+    this.createDecor(zones);
     this.createPortals();
-    this.createPlayer(width, height);
+    this.createPlayer();
     this.createHint(zones.isCoarsePointer);
 
     this.agata = new AgataGuide(this);
     EventBus.on('lead-capture-complete', this.startIntro, this);
-    this.time.delayedCall(500, () => this.startIntro());
+    this.time.delayedCall(600, () => this.startIntro());
     this.events.once('shutdown', () => {
       EventBus.off('lead-capture-complete', this.startIntro, this);
     });
@@ -53,101 +50,76 @@ export class HubScene extends Phaser.Scene {
   private startIntro = (): void => {
     if (this.introStarted) return;
     this.introStarted = true;
-    this.agata?.emitAnchorUpdate();
-    this.agata?.playState('point');
+    this.agata?.showCharacter();
     EventBus.emit('start-hub-intro');
   };
 
-  private createBackground(width: number, height: number, isMobile: boolean): void {
-    const cx = width / 2;
-    const decorCount = isMobile ? 3 : 6;
+  private createDecor(zones: ReturnType<typeof getSafeZones>): void {
+    const { width, height } = this.scale;
+    const count = zones.isMobile ? 3 : 5;
 
-    for (let i = 0; i < decorCount; i++) {
-      const x = Phaser.Math.Between(0, width);
-      const y = Phaser.Math.Between(this.playBounds.y, height - 80);
-      const w = Phaser.Math.Between(40, 100);
-      const h = Phaser.Math.Between(8, 16);
-      const platform = this.add.rectangle(x, y, w, h, 0x1a1a3a, 0.4);
-      platform.setStrokeStyle(1, 0x3a3a6a, 0.5);
+    for (let i = 0; i < count; i++) {
+      const x = Phaser.Math.Between(this.playBounds.x, width - 24);
+      const y = Phaser.Math.Between(this.playBounds.y, height - 60);
+      const platform = this.add.rectangle(x, y, 60, 10, 0x1a1a3a, 0.35);
+      platform.setStrokeStyle(1, 0x3a3a6a, 0.4);
       this.tweens.add({
         targets: platform,
-        y: y - Phaser.Math.Between(8, 20),
-        alpha: 0.6,
-        duration: Phaser.Math.Between(2000, 4000),
+        y: y - 12,
+        alpha: 0.55,
+        duration: 2500,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
       });
-      this.backgroundElements.push(platform);
+      this.decor.push(platform);
     }
 
-    const titleY = this.playBounds.y - (isMobile ? 28 : 36);
-    this.titleText = this.add.text(cx, titleY, 'MUSEO DE LA DINAMIZACION DIGITAL', {
-      fontSize: isMobile ? '17px' : '22px',
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      stroke: '#705893',
-      strokeThickness: 4,
-      align: 'center',
-      wordWrap: { width: width - 40 },
-    });
-    this.titleText.setOrigin(0.5, 0.5);
-    this.backgroundElements.push(this.titleText);
-
-    const zones = getSafeZones(this.scale);
-    const hintLabel = zones.isCoarsePointer
-      ? 'Toca un portal para entrar'
-      : 'Acercate a un portal - E o clic';
-
-    this.subtitleText = this.add.text(cx, titleY + 30, hintLabel, {
-      fontSize: isMobile ? '12px' : '13px',
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      color: '#aaaaaa',
-      stroke: '#000000',
-      strokeThickness: 2,
-    });
-    this.subtitleText.setOrigin(0.5, 0.5);
-    this.backgroundElements.push(this.subtitleText);
+    if (!zones.isMobile) {
+      const hint = this.add.text(width / 2, this.playBounds.y - 8, 'Explora los 4 pilares del museo', {
+        fontSize: '13px',
+        fontFamily: 'Montserrat, system-ui, sans-serif',
+        color: '#888888',
+      });
+      hint.setOrigin(0.5, 1);
+      this.decor.push(hint);
+    }
   }
 
   private createPortals(): void {
     const positions = getHubPortalPositions(this.playBounds);
     this.portals = PILLAR_ORDER.map((id, index) =>
-      Portal.fromPillar(this, positions[index].x, positions[index].y, id, false, index * 80),
+      Portal.fromPillar(this, positions[index].x, positions[index].y, id, false, index * 70),
     );
   }
 
-  private createPlayer(width: number, height: number): void {
-    const startY = Math.min(height * 0.82, this.playBounds.bottom - 40);
-    this.player = new Player(this, width / 2, startY);
+  private createPlayer(): void {
+    const y = Math.min(this.scale.height * 0.78, this.playBounds.bottom - 32);
+    const x = this.playBounds.x + this.playBounds.width * 0.55;
+    this.player = new Player(this, x, y);
   }
 
   private createHint(isCoarsePointer: boolean): void {
     this.hintText = this.add.text(0, 0, '', {
-      fontSize: '16px',
+      fontSize: '15px',
       fontFamily: 'Montserrat, system-ui, sans-serif',
       color: '#ffffff',
       fontStyle: 'bold',
-      backgroundColor: '#00000088',
-      padding: { x: 16, y: 8 },
+      backgroundColor: '#00000099',
+      padding: { x: 14, y: 8 },
     });
-    this.hintText.setOrigin(0.5, 1);
-    this.hintText.setVisible(false);
+    this.hintText.setOrigin(0.5, 1).setDepth(60).setVisible(false);
 
     this.events.on('portal-near', (pillarId: PillarId) => {
       const portal = this.portals.find((p) => p.config.id === pillarId);
       if (portal && this.hintText) {
-        const action = isCoarsePointer ? 'Toca' : 'Entrar (E)';
-        this.hintText.setText(`${action} - ${portal.config.label}`);
-        this.hintText.setPosition(portal.container.x, portal.container.y - 88);
+        const action = isCoarsePointer ? 'Toca el portal' : 'Entrar (E)';
+        this.hintText.setText(action);
+        this.hintText.setPosition(portal.container.x, portal.container.y - 92);
         this.hintText.setVisible(true);
       }
     });
-
-    this.events.on('portal-far', () => {
-      this.hintText?.setVisible(false);
-    });
+    this.events.on('portal-far', () => this.hintText?.setVisible(false));
   }
 
   private onResize = (): void => {
@@ -157,13 +129,12 @@ export class HubScene extends Phaser.Scene {
     this.portals.forEach((portal, i) => {
       portal.container.setPosition(positions[i].x, positions[i].y);
     });
-    this.agata?.emitAnchorUpdate();
   };
 
   private handleInteract(): void {
+    if (this.agata?.isDialogueBlocking?.()) return;
     const pos = this.player.getPosition();
     for (const portal of this.portals) {
-      if (portal.config.locked) continue;
       const distance = Phaser.Math.Distance.Between(
         pos.x,
         pos.y,
@@ -178,12 +149,12 @@ export class HubScene extends Phaser.Scene {
   }
 
   private handlePortalClick(pillarId: PillarId): void {
-    const portal = this.portals.find((p) => p.config.id === pillarId);
-    if (!portal || portal.config.locked) return;
+    if (this.agata?.isDialogueBlocking()) return;
     this.enterPortal(pillarId);
   }
 
   private enterPortal(pillarId: PillarId): void {
+    if (this.agata?.isDialogueBlocking()) return;
     EventBus.emit('dialogue-finished');
     EventBus.emit('portal-entered', pillarId);
     this.cameras.main.fadeOut(400, 0, 0, 0);
@@ -197,9 +168,6 @@ export class HubScene extends Phaser.Scene {
     const playerPos = this.player.getPosition();
     for (const portal of this.portals) {
       portal.update(playerPos);
-    }
-    if (this.time.now % 500 < delta) {
-      this.agata?.emitAnchorUpdate();
     }
   }
 
