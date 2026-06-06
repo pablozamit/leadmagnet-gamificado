@@ -140,7 +140,8 @@ export class HubScene extends Phaser.Scene {
           id: 'farewell',
           speaker: 'agata',
           text: '¡Buena elección! Vamos a descubrir qué sorpresas nos esperan allí.',
-          nextId: 'end'
+          nextId: 'end',
+          autoAdvance: true // 🌟 CORRECCIÓN: Activamos el auto-avance exclusivo aquí
         }
       }
     };
