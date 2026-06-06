@@ -92,7 +92,7 @@ export class AgataSpeechBubble {
     this.clearChoices();
 
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = Math.min(maxWidth, isMobile ? 330 : 320);
+    this.bubbleW = Math.min(maxWidth, isMobile ? 340 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
 
     this.nameText.setText('ÁGATA');
@@ -165,7 +165,6 @@ export class AgataSpeechBubble {
     this.bg.fillRoundedRect(0, 0, w, h, r);
     this.bg.strokeRoundedRect(0, 0, w, h, r);
 
-    // Ocultar la cola en móvil para que actúe como caja limpia superior
     if (!isMobile) {
       const tailX = w * 0.15;
       this.bg.fillTriangle(tailX, h, tailX + 24, h, tailX + 8, h + 12);
@@ -184,10 +183,9 @@ export class AgataSpeechBubble {
     const margin = 8;
     
     if (isMobile) {
-      // 🌟 Fijado arriba en móvil para no colisionar con la cuadrícula ni personajes
-      const topMargin = this.scene.scale.height * 0.04;
+      // 🌟 CORRECCIÓN: Fijado arriba de forma absoluta en móvil para liberar espacio central
       const x = (this.scene.scale.width - this.bubbleW) / 2;
-      this.container.setPosition(x, topMargin);
+      this.container.setPosition(x, 15);
     } else {
       let x = anchorX - this.bubbleW * 0.2;
       x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
@@ -198,7 +196,7 @@ export class AgataSpeechBubble {
 
   public setPosition(anchorX: number, anchorTopY: number, maxWidth: number): void {
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = Math.min(maxWidth, isMobile ? 330 : 320);
+    this.bubbleW = Math.min(maxWidth, isMobile ? 340 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
