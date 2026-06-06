@@ -42,7 +42,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
                 inset: 0,
                 background: 'rgba(0,0,0,0.45)',
                 zIndex: 50,
-                pointerEvents: 'none',
+                pointerEvents: 'auto',
               }}
             />
 
