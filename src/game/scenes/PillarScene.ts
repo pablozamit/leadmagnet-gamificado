@@ -100,7 +100,6 @@ export class PillarScene extends Phaser.Scene {
     this.pillarData.brands.forEach((brand, i) => {
       const { x, y } = positions[i];
 
-      // Rediseño: Solo texto, sin iconos ni cajas
       const name = this.add
         .text(x, y, brand.name.toUpperCase(), {
           fontSize: '18px',
@@ -135,7 +134,7 @@ export class PillarScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
       });
 
-      this.stationZones.push(name as any); // Reutilizamos el array para limpieza
+      this.stationZones.push(name as any);
     });
   }
 
@@ -185,7 +184,6 @@ export class PillarScene extends Phaser.Scene {
   private enterRoom(brand: Brand): void {
     EventBus.emit('dialogue-finished');
 
-    // Si la cámara ya está en fade out, no repetimos
     if (this.cameras.main.fadeEffect.isRunning) return;
 
     this.cameras.main.fadeOut(400, 0, 0, 0);
@@ -201,7 +199,8 @@ export class PillarScene extends Phaser.Scene {
 
     this.cameras.main.fadeOut(300, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
-      this.scene.start('HubScene');
+      // 🌟 CORRECCIÓN: Ahora pasamos el flag al volver para evitar el mensaje de bienvenida inicial repetitivo
+      this.scene.start('HubScene', { fromCompletedPillar: true });
     });
   }
 
