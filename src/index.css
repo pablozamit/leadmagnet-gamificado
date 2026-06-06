@@ -2257,16 +2257,14 @@
 */
 @media (max-width: 767px) {
   .fi-game-stage {
-    position: relative; /* ancla los absolute del sheet */
-    overflow: hidden;   /* evita scroll indeseado */
+    position: relative;
+    overflow: hidden;
   }
 
-  /* El canvas ocupa todo el espacio disponible encima del sheet */
   .fi-game-stage > #phaser-container {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
-    /* Quitamos cualquier height fijo previo */
     height: auto !important;
   }
 
@@ -2274,11 +2272,5 @@
     width: 100% !important;
     height: 100% !important;
     display: block;
-    object-fit: contain;
-  }
-
-  /* Aseguramos que BrandOverlay (absolute) no empuje el layout flex */
-  .fi-brand-overlay {
-    pointer-events: auto;
   }
 }
