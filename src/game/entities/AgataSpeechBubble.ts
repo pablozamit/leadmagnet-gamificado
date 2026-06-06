@@ -4,9 +4,6 @@ import type { DialogueNode, DialogueOption } from '../../data/dialogueData';
 const BUBBLE_DEPTH = 120;
 const PADDING = 16;
 
-/**
- * Burbuja de diálogo dibujada en Phaser, adaptativa para PC y móvil.
- */
 export class AgataSpeechBubble {
   public readonly container: Phaser.GameObjects.Container;
   private readonly scene: Phaser.Scene;
@@ -50,14 +47,11 @@ export class AgataSpeechBubble {
 
   public showHighlight(): void {
     if (this.highlightGraphics) return;
-
     this.highlightGraphics = this.scene.add.graphics();
     this.container.addAt(this.highlightGraphics, 0);
-
     const w = this.bubbleW;
     const h = this.bubbleH;
     const r = 18;
-
     this.scene.tweens.add({
       targets: this.highlightGraphics,
       alpha: { from: 0.2, to: 0.6 },
@@ -92,8 +86,16 @@ export class AgataSpeechBubble {
     this.clearChoices();
 
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = Math.min(maxWidth, isMobile ? 340 : 320);
+
+    // En móvil la burbuja ocupa casi todo el ancho
+    this.bubbleW = isMobile
+      ? this.scene.scale.width - 24
+      : Math.min(maxWidth, 320);
+
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
+
+    // En móvil reducimos el font de body para que quepa más texto
+    this.bodyText.setFontSize(isMobile ? '14px' : '15px');
 
     this.nameText.setText('ÁGATA');
     this.bodyText.setText(node.text);
@@ -112,6 +114,12 @@ export class AgataSpeechBubble {
     }
 
     this.bubbleH = contentH + PADDING;
+
+    // En móvil limitamos la altura máxima de la burbuja al 30% de pantalla
+    if (isMobile) {
+      this.bubbleH = Math.min(this.bubbleH, this.scene.scale.height * 0.30);
+    }
+
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
     this.container.setVisible(true);
@@ -126,11 +134,12 @@ export class AgataSpeechBubble {
   }
 
   private createChoiceButton(opt: DialogueOption, index: number): Phaser.GameObjects.Text {
+    const isMobile = this.scene.scale.width <= 480;
     const y = PADDING + 18 + this.bodyText.height + 16 + index * 44;
     const label = this.scene.add
       .text(PADDING, y, opt.text, {
         fontFamily: 'Montserrat, system-ui, sans-serif',
-        fontSize: '14px',
+        fontSize: isMobile ? '13px' : '14px',
         color: '#ffffff',
         backgroundColor: '#705893',
         padding: { x: 14, y: 10 },
@@ -158,7 +167,7 @@ export class AgataSpeechBubble {
     const isMobile = this.scene.scale.width <= 480;
     const w = this.bubbleW;
     const h = this.bubbleH;
-    const r = 18;
+    const r = 16;
     this.bg.clear();
     this.bg.fillStyle(0xffffff, 0.97);
     this.bg.lineStyle(2, 0x705893, 0.45);
@@ -180,12 +189,12 @@ export class AgataSpeechBubble {
 
   private layoutAt(anchorX: number, anchorTopY: number): void {
     const isMobile = this.scene.scale.width <= 480;
-    const margin = 8;
-    
+    const margin = 12;
+
     if (isMobile) {
-      // 🌟 CORRECCIÓN: Fijado arriba de forma absoluta en móvil para liberar espacio central
+      // Burbuja fijada en la parte superior, centrada horizontalmente
       const x = (this.scene.scale.width - this.bubbleW) / 2;
-      this.container.setPosition(x, 15);
+      this.container.setPosition(x, margin);
     } else {
       let x = anchorX - this.bubbleW * 0.2;
       x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
@@ -196,7 +205,9 @@ export class AgataSpeechBubble {
 
   public setPosition(anchorX: number, anchorTopY: number, maxWidth: number): void {
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = Math.min(maxWidth, isMobile ? 340 : 320);
+    this.bubbleW = isMobile
+      ? this.scene.scale.width - 24
+      : Math.min(maxWidth, 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
