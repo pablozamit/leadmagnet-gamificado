@@ -126,7 +126,13 @@ export class HubScene extends Phaser.Scene {
   };
 
   private handlePortalClick(pillarId: PillarId): void {
-    // 🌟 CORRECCIÓN: Eliminado el "if (this.agata?.isDialogueBlocking()) return;" para permitir clics libres
+    // 🌟 CORRECCIÓN: Si el pilar ya está en la lista de completados, bloqueamos por completo el re-ingreso
+    const progress = (this.game as any).progress;
+    const completedList = progress?.pillarsCompleted || [];
+    if (completedList.includes(pillarId)) {
+      return; 
+    }
+
     this.agata?.playState('jump');
 
     const farewell: any = {
