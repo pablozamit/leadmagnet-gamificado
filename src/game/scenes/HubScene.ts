@@ -5,9 +5,6 @@ import { EventBus } from '../EventBus';
 import { getSafeZones, getHubPortalPositions } from '../utils/layout';
 import { PILLAR_ORDER } from '../../data/pillarAssets';
 
-/**
- * Hub del museo: Ágata NPC, portales táctiles.
- */
 export class HubScene extends Phaser.Scene {
   private portals: Portal[] = [];
   private agata: AgataGuide | null = null;
@@ -74,14 +71,14 @@ export class HubScene extends Phaser.Scene {
   };
 
   private createDecor(zones: ReturnType<typeof getSafeZones>): void {
-    // En móvil no añadimos decoración para no saturar la pantalla
+    // Sin decoración en móvil para no saturar la pantalla
     if (zones.isMobile) return;
 
-    const { width, height } = this.scale;
+    const { width } = this.scale;
     const count = 5;
     for (let i = 0; i < count; i++) {
       const x = Phaser.Math.Between(this.playBounds.x, width - 24);
-      const y = Phaser.Math.Between(this.playBounds.y, height - 60);
+      const y = Phaser.Math.Between(this.playBounds.y, this.scale.height - 60);
       const platform = this.add.rectangle(x, y, 60, 10, 0x1a1a3a, 0.35);
       platform.setStrokeStyle(1, 0x3a3a6a, 0.4);
       this.tweens.add({
