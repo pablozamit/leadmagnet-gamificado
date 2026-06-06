@@ -170,14 +170,6 @@ export default function App() {
 
       {(phase === 'hub' || phase === 'pillar') && (
         <div className="fi-game-stage">
-          {phase === 'pillar' && !activeBrand && (
-            <ProgressBar
-              completedPillars={completedPillars}
-              totalPillars={4}
-              currentPillar={currentPillar}
-              frasesClaveCount={progress?.frasesClave.length ?? 0}
-            />
-          )}
           <PhaserGame ref={gameRef} />
           <BrandOverlay brand={activeBrand} />
         </div>
