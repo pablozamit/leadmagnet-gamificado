@@ -12,12 +12,6 @@ type AppPhase = 'mission' | 'hub' | 'pillar' | 'final';
 
 /**
  * `App` - Orquestador principal del flujo del juego.
- *
- * Fases:
- * - `mission`: MissionIntro (landing + formulario integrado)
- * - `hub`: PhaserGame corriendo HubScene
- * - `pillar`: PhaserGame corriendo PillarScene o RoomScene
- * - `final`: Pantalla de cierre de alta conversión con pitch directo
  */
 export default function App() {
   const [phase, setPhase] = useState<AppPhase>('mission');
@@ -26,7 +20,6 @@ export default function App() {
   const [currentPillar, setCurrentPillar] = useState<string | null>(null);
   const gameRef = useRef<IRefPhaserGame>({ game: null, scene: null });
 
-  // Re-hidratar progreso persistido al montar
   useEffect(() => {
     const stored = loadProgress();
     if (stored) {
@@ -35,14 +28,12 @@ export default function App() {
     }
   }, []);
 
-  // Sincronizar el progreso con la instancia viva del juego Phaser
   useEffect(() => {
     if (gameRef.current.game) {
       (gameRef.current.game as any).progress = progress;
     }
   }, [progress]);
 
-  // 🌟 CORRECCIÓN: Disparador automático de fin de juego. Al completar los 4 pilares, salta a la pantalla final.
   useEffect(() => {
     if (progress && progress.pillarsCompleted.length === 4) {
       const timer = setTimeout(() => {
@@ -148,9 +139,8 @@ export default function App() {
       EventBus.off('frase-clave-collected', onFraseClaveCollected);
       EventBus.off('current-scene-ready', onSceneReady);
     };
-  }, [activeBrand]);
+  }, [activeBrand, progress]);
 
-  // Manejador del cambio de escena interna en Phaser
   useEffect(() => {
     const sm = gameRef.current.scene?.scene;
     if (phase !== 'hub' || !sm) return;
@@ -170,30 +160,29 @@ export default function App() {
 
       {(phase === 'hub' || phase === 'pillar') && (
         <div className="fi-game-stage">
-          {/* 🌟 CORRECCIÓN: El Header flotante residual antiguo ha sido erradicado por completo para liberar la pantalla */}
           <PhaserGame ref={gameRef} />
           <BrandOverlay brand={activeBrand} />
         </div>
       )}
 
-      {/* 🌟 CORRECCIÓN: Estructura real y copies estratégicos para la pantalla final interactiva */}
+      {/* 🌟 CORRECCIÓN: Pantalla de cierre fluida, narrativa integrada del email y enlace definitivo corregido */}
       {phase === 'final' && (
         <div className="fi-screen fi-screen--final" style={{ background: '#0a0a1e', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: '#fff', textAlign: 'center' }}>
           <div style={{ maxWidth: '640px', width: '100%' }}>
-            <h2 className="fi-final-title" style={{ fontFamily: "var(--fi-font-serif)", fontSize: '2.2rem', marginBottom: '2rem', lineHeight: '1.4', fontWeight: '400' }}>
-              ¿Quieres saber cómo aplicar todas estas estrategias y muchas otras a cualquier proyecto?
-              <br />
-              <span style={{ color: '#f6a000', display: 'block', marginTop: '1.5rem', fontWeight: 'bold' }}>
-                Te presento el Experto Universitario en Dinamización Digital y Social
-              </span>
+            <h2 className="fi-final-title" style={{ fontFamily: "var(--fi-font-serif)", fontSize: '2.4rem', marginBottom: '1.5rem', lineHeight: '1.3', fontWeight: '400', color: '#f6a000' }}>
+              ¡Felicidades por completar tu ruta!
             </h2>
             
-            <p style={{ color: '#ccc', fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '2.5rem' }}>
-              Has visto cómo los líderes del mercado aplican la gamificación, la celebración, el acompañamiento y la co-creación de comunidades. Domina hoy el sistema completo y las herramientas interactivas que transformarán tus resultados.
+            <p style={{ color: '#ccc', fontSize: '1.15rem', lineHeight: '1.7', marginBottom: '2rem' }}>
+              Si miras tu email (vigilar que no haya llegado a la carpeta de spam) podrás ver las 8 estrategias de marca que no has podido explorar ahora.
+            </p>
+
+            <p style={{ color: '#ffffff', fontSize: '1.15rem', lineHeight: '1.7', marginBottom: '2.5rem', opacity: 0.95 }}>
+              Pero antes, si quieres aprender todo lo que hay detrás de estas estrategias, que sepas que están abiertas las plazas para el único curso universitario 100% enfocado en dinamización:
             </p>
 
             <a
-              href="https://agatapuig.com/experto-universitario-en-dinamizacion-digital-2025/"
+              href="https://agatapuig.com/experto-universitario-en-dinamizacion-digital-2026-ev"
               className="fi-cta-btn fi-cta-btn--gold fi-cta-btn--giant"
               target="_blank"
               rel="noopener noreferrer"
@@ -206,7 +195,7 @@ export default function App() {
               </svg>
             </a>
             
-            <p style={{ fontSize: '13px', color: '#666', marginTop: '2.5rem', opacity: 0.7, fontStyle: 'italic' }}>
+            <p style={{ fontSize: '13px', color: '#666', marginTop: '3rem', opacity: 0.7, fontStyle: 'italic' }}>
               Las plazas son limitadas. Cada edición se completa antes del cierre.
             </p>
           </div>
