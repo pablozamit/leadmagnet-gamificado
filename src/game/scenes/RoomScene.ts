@@ -79,11 +79,9 @@ export class RoomScene extends Phaser.Scene {
       .setVisible(false);
   }
 
+  // 🌟 CORRECCIÓN: El retorno automático queda desactivado para que el usuario lea a su propio ritmo.
   private onDialogueFinished = (): void => {
-    // Si el diálogo terminó naturalmente (sin forzar), volvemos automáticamente al Hub
-    this.time.delayedCall(500, () => {
-      this.returnToHub();
-    });
+    // Espacio en blanco intencional. El usuario sale de forma voluntaria usando el botón superior "← Pilar".
   };
 
   private onResize = (): void => {
