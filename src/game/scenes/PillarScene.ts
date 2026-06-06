@@ -13,6 +13,7 @@ export class PillarScene extends Phaser.Scene {
   private stationZones: Phaser.GameObjects.Zone[] = [];
   private playBounds = new Phaser.Geom.Rectangle(0, 0, 0, 0);
   private decor: Phaser.GameObjects.GameObject[] = [];
+  private isMobile = false;
 
   constructor() {
     super({ key: 'PillarScene' });
@@ -33,6 +34,7 @@ export class PillarScene extends Phaser.Scene {
 
     const zones = getSafeZones(this.scale);
     this.playBounds = zones.playArea;
+    this.isMobile = zones.isMobile;
 
     this.createDecor(zones);
     this.createStations();
@@ -73,9 +75,7 @@ export class PillarScene extends Phaser.Scene {
       title.setOrigin(0.5, 0);
       title.setAlpha(0.65);
       this.decor.push(title);
-    }
 
-    if (!zones.isMobile) {
       const hint = this.add.text(
         this.playBounds.centerX,
         this.playBounds.y - 6,
@@ -95,31 +95,35 @@ export class PillarScene extends Phaser.Scene {
     const positions = getPillarStationPositions(
       this.playBounds,
       this.pillarData.brands.length,
+      this.isMobile,
     );
+
+    const isMobile = this.isMobile;
 
     this.pillarData.brands.forEach((brand, i) => {
       const { x, y } = positions[i];
 
       const name = this.add
         .text(x, y, brand.name.toUpperCase(), {
-          fontSize: '18px',
+          fontSize: isMobile ? '16px' : '18px',
           fontStyle: 'bold',
           color: '#ffffff',
           fontFamily: 'Montserrat, system-ui, sans-serif',
           backgroundColor: '#ffffff11',
-          padding: { x: 20, y: 12 },
+          padding: isMobile ? { x: 24, y: 16 } : { x: 20, y: 12 },
+          // En móvil ancho fijo para que los botones sean más fáciles de pulsar
+          fixedWidth: isMobile ? this.scale.width * 0.60 : 0,
+          align: 'center',
         })
         .setOrigin(0.5)
         .setDepth(STATION_DEPTH + 2)
         .setInteractive({ useHandCursor: true });
 
       name.on('pointerdown', () => this.onStationClick(brand));
-
       name.on('pointerover', () => {
         name.setBackgroundColor('#ffffff22');
         name.setScale(1.05);
       });
-
       name.on('pointerout', () => {
         name.setBackgroundColor('#ffffff11');
         name.setScale(1);
@@ -131,7 +135,7 @@ export class PillarScene extends Phaser.Scene {
         duration: 1000 + i * 200,
         yoyo: true,
         repeat: -1,
-        ease: 'Sine.easeInOut'
+        ease: 'Sine.easeInOut',
       });
 
       this.stationZones.push(name as any);
@@ -171,9 +175,11 @@ export class PillarScene extends Phaser.Scene {
   private onResize = (): void => {
     const zones = getSafeZones(this.scale);
     this.playBounds = zones.playArea;
+    this.isMobile = zones.isMobile;
     const positions = getPillarStationPositions(
       this.playBounds,
       this.pillarData.brands.length,
+      this.isMobile,
     );
     this.stationZones.forEach((zone, i) => {
       const { x, y } = positions[i];
@@ -183,9 +189,7 @@ export class PillarScene extends Phaser.Scene {
 
   private enterRoom(brand: Brand): void {
     EventBus.emit('dialogue-finished');
-
     if (this.cameras.main.fadeEffect.isRunning) return;
-
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('RoomScene', { brand, pillarId: this.pillarData.id });
@@ -194,12 +198,9 @@ export class PillarScene extends Phaser.Scene {
 
   private returnToHub(): void {
     EventBus.emit('dialogue-finished');
-
     if (this.cameras.main.fadeEffect.isRunning) return;
-
     this.cameras.main.fadeOut(300, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
-      // 🌟 CORRECCIÓN: Ahora pasamos el flag al volver para evitar el mensaje de bienvenida inicial repetitivo
       this.scene.start('HubScene', { fromCompletedPillar: true });
     });
   }
