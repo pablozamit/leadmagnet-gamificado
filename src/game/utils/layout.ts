@@ -81,14 +81,14 @@ export function getAgataNpcPosition(
   const h = scale.height;
 
   if (zones.isMobile) {
-    // Móvil: Ágata pequeña, esquina inferior izquierda
-    const targetHeight = Math.min(h * 0.20, 150);
+    // 🌟 CORRECCIÓN: Movemos a Ágata a la zona superior izquierda para unificarla con su bocadillo de texto
+    const targetHeight = 90; // Escala compacta ideal para cabecera móvil
     const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
     return {
-      x: w * 0.13,
-      y: h - 4,
+      x: 50,
+      y: 155, // Situada arriba bajo la banda del HUD, visible y sin solaparse con tarjetas inferiores
       scale: spriteScale,
-      bubbleMaxWidth: w * 0.88,
+      bubbleMaxWidth: w - 110, // Ancho disponible a la derecha para que la burbuja quepa limpia
     };
   }
 
