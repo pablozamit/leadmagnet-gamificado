@@ -19,7 +19,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Estilos responsivos en tiempo de ejecución
+  // Estilos inline reactivos para el contenedor móvil
   const containerStyle: React.CSSProperties = isMobile ? {
     position: 'absolute',
     bottom: 0,
@@ -32,6 +32,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
     overflowY: 'auto',
     boxSizing: 'border-box',
     zIndex: 999,
+    color: '#fff',
   } : {};
 
   const nameStyle: React.CSSProperties = isMobile ? {
@@ -46,7 +47,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
   const descriptionStyle: React.CSSProperties = isMobile ? {
     color: '#ffffff',
     fontSize: '0.95rem',
-    lineSpacing: '1.5',
+    lineHeight: '1.6',
     margin: 0,
     textAlign: 'left'
   } : {};
