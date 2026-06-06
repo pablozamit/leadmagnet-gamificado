@@ -114,6 +114,7 @@ export class PillarScene extends Phaser.Scene {
           // En móvil ancho fijo para que los botones sean más fáciles de pulsar
           fixedWidth: isMobile ? this.scale.width * 0.60 : 0,
           align: 'center',
+          wordWrap: isMobile ? { width: this.scale.width * 0.55 } : undefined
         })
         .setOrigin(0.5)
         .setDepth(STATION_DEPTH + 2)
