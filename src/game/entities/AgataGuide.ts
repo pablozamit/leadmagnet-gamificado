@@ -130,19 +130,11 @@ export class AgataGuide {
 
     this.clearTimers();
 
-    const hasChoices = Boolean(node.options && node.options.length > 0);
-
-    if (hasChoices) {
-      // Si hay opciones, no podemos avanzar automáticamente, pero sí resaltar después de 5s
-      this.highlightTimer = this.scene.time.delayedCall(5000, () => {
-        this.bubble.showHighlight();
-      });
-    } else {
-      // Si no hay opciones, avanzamos automáticamente después de 5s
-      this.autoAdvanceTimer = this.scene.time.delayedCall(5000, () => {
-        this.advanceFromNode(node);
-      });
-    }
+    // 🌟 CORRECCIÓN: Ningún texto pasa solo de forma automática.
+    // Pasados 5 segundos de inactividad, se activa el resalte visual/brillo en la burbuja.
+    this.highlightTimer = this.scene.time.delayedCall(5000, () => {
+      this.bubble.showHighlight();
+    });
 
     if (node.onComplete === 'frase-clave-collected' && this.activeBrandId) {
       const brand = findBrandById(this.activeBrandId);
@@ -282,7 +274,6 @@ export class AgataGuide {
 
   private getBubbleAnchor(): { x: number; y: number; maxWidth: number } {
     const pos = getAgataNpcPosition(this.scene.scale, this.zones);
-    // Ahora en móvil también flota sobre su cabeza
     const headY = this.root.y + (this.sprite.y * this.root.scaleY) - (this.sprite.displayHeight) - 5;
     return {
       x: this.root.x,
@@ -311,6 +302,7 @@ export class AgataGuide {
     this.playDialogue(hubIntroDialogue);
   };
 
+  // 🌟 CORRECCIÓN: Inyecta el pilar dinámicamente y congela el diálogo sin añadir botones de avance para obligar a seleccionar una marca.
   private onPillarIntro = (pillarName: string): void => {
     const dialogue: BrandDialogue = {
       startNodeId: 'start',
@@ -318,14 +310,7 @@ export class AgataGuide {
         start: {
           id: 'start',
           speaker: 'agata',
-          text: `¡Bienvenida al pilar de ${pillarName}! Toca una marca para entrar en su historia.`,
-          nextId: 'end',
-        },
-        end: {
-          id: 'end',
-          speaker: 'agata',
-          text: 'Cada sala esconde una táctica real. ¡Explora!',
-          options: [{ text: '¡A explorar!', nextId: '' }],
+          text: `Elige una de estas 3 marcas para que veamos su estrategia de ${pillarName}.`,
         },
       },
     };
