@@ -21,7 +21,6 @@ export class HubScene extends Phaser.Scene {
   }
 
   init(data?: { fromCompletedPillar?: boolean }): void {
-    // La escena se reutiliza: permitir volver a mostrar Ágata e intro
     this.introPlayed = false;
     this.fromCompletedPillar = !!data?.fromCompletedPillar;
   }
@@ -52,14 +51,18 @@ export class HubScene extends Phaser.Scene {
     if (this.introPlayed) return;
     this.introPlayed = true;
 
-    if (this.fromCompletedPillar) {
+    const progress = (this.game as any).progress;
+    const hasCompletedPillars = progress?.pillarsCompleted && progress.pillarsCompleted.length > 0;
+
+    // 🌟 CORRECCIÓN: Si ya hay progreso o venimos de un pilar, Ágata va al grano sin repetir el saludo inicial absurdo
+    if (this.fromCompletedPillar || hasCompletedPillars) {
       const welcomeBack: any = {
         startNodeId: 'welcome',
         nodes: {
           welcome: {
             id: 'welcome',
             speaker: 'agata',
-            text: 'Muy bien, ¿por qué otro pilar quieres seguir?',
+            text: '¿Qué pilar de la dinamización quieres explorar ahora?',
           }
         }
       };
@@ -72,7 +75,6 @@ export class HubScene extends Phaser.Scene {
   private createDecor(zones: ReturnType<typeof getSafeZones>): void {
     const { width, height } = this.scale;
 
-    // Ocultar plataformas decorativas en móvil
     if (!zones.isMobile) {
         const count = 5;
         for (let i = 0; i < count; i++) {
@@ -126,7 +128,6 @@ export class HubScene extends Phaser.Scene {
   };
 
   private handlePortalClick(pillarId: PillarId): void {
-    // 🌟 CORRECCIÓN: Si el pilar ya está en la lista de completados, bloqueamos por completo el re-ingreso
     const progress = (this.game as any).progress;
     const completedList = progress?.pillarsCompleted || [];
     if (completedList.includes(pillarId)) {
