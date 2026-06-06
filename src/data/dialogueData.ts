@@ -24,13 +24,13 @@ export const hubIntroDialogue: BrandDialogue = {
     welcome: {
       id: 'welcome',
       speaker: 'agata',
-      text: '¡Hola! Soy Ágata. Bienvenida al Museo de la Dinamización Digital.',
+      text: '¡Hola! Soy Ágata. Bienvenida al Museo de la Dinamización Digital y Social.',
       nextId: 'intro_2',
     },
     intro_2: {
       id: 'intro_2',
       speaker: 'agata',
-      text: 'Aquí descubrirás cómo las grandes marcas conectan con sus clientes de forma humana y dinámica.',
+      text: 'Aquí descubrirás cómo las grandes marcas conectan con sus clientes de forma humana y dinámica mediante la dinamización.',
       nextId: 'intro_3',
     },
     intro_3: {
