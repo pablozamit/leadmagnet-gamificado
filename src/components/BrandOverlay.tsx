@@ -19,7 +19,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 🌟 IMPLEMENTACIÓN OPCIÓN 2: Proporciones compactas fijas para la mitad inferior
+  // Proporciones compactas fijas para la mitad inferior (Opción 2)
   const containerStyle: React.CSSProperties = isMobile ? {
     position: 'absolute',
     bottom: 0,
@@ -58,18 +58,18 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
     <AnimatePresence>
       {brand && (
         <motion.div
-          className={isMobile ? "" : "fi-brand-overlay"}
+          className="fi-brand-overlay"
           style={containerStyle}
           initial={isMobile ? { opacity: 0, y: 50 } : { opacity: 0, x: 50 }}
           animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, x: 0 }}
           exit={isMobile ? { opacity: 0, y: 50 } : { opacity: 0, x: 50 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
         >
-          <div className={isMobile ? "" : "fi-brand-overlay__content"}>
-            <h2 style={nameStyle} className={isMobile ? "" : "fi-brand-overlay__name"}>
+          <div className="fi-brand-overlay__content">
+            <h2 style={isMobile ? nameStyle : {}} className={isMobile ? "" : "fi-brand-overlay__name"}>
               {brand.name}
             </h2>
-            <p style={descriptionStyle} className={isMobile ? "" : "fi-brand-overlay__description"}>
+            <p style={isMobile ? descriptionStyle : {}} className={isMobile ? "" : "fi-brand-overlay__description"}>
               {brand.descripcion}
             </p>
           </div>
