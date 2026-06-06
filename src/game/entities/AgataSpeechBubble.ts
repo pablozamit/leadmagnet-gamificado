@@ -192,9 +192,13 @@ export class AgataSpeechBubble {
     const margin = 12;
 
     if (isMobile) {
-      // Burbuja fijada en la parte superior, centrada horizontalmente
-      const x = (this.scene.scale.width - this.bubbleW) / 2;
-      this.container.setPosition(x, margin);
+      // 🌟 CORRECCIÓN: Posicionamos la burbuja inmediatamente a la derecha de Ágata
+      const x = anchorX + 35;
+      const y = anchorTopY - this.bubbleH * 0.65;
+      this.container.setPosition(
+        Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin),
+        Phaser.Math.Clamp(y, margin, this.scene.scale.height - this.bubbleH - margin)
+      );
     } else {
       let x = anchorX - this.bubbleW * 0.2;
       x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
