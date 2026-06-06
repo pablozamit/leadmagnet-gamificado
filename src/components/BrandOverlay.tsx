@@ -19,37 +19,39 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Estilos inline reactivos para el contenedor móvil
+  // 🌟 IMPLEMENTACIÓN OPCIÓN 2: Proporciones compactas fijas para la mitad inferior
   const containerStyle: React.CSSProperties = isMobile ? {
     position: 'absolute',
     bottom: 0,
     left: 0,
     width: '100%',
-    height: '42vh',
+    height: '40vh',
     backgroundColor: '#0a0a1e',
-    borderTop: '3px solid #f6a000',
-    padding: '20px',
-    overflowY: 'auto',
+    borderTop: '2px solid #f6a000',
+    padding: '12px 16px',
     boxSizing: 'border-box',
     zIndex: 999,
-    color: '#fff',
+    color: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
   } : {};
 
   const nameStyle: React.CSSProperties = isMobile ? {
     color: '#f6a000',
-    fontSize: '1.3rem',
-    margin: '0 0 10px 0',
+    fontSize: '1.1rem',
+    margin: '0 0 4px 0',
     fontFamily: 'Montserrat, sans-serif',
     fontWeight: 'bold',
     textAlign: 'left'
   } : {};
 
   const descriptionStyle: React.CSSProperties = isMobile ? {
-    color: '#ffffff',
-    fontSize: '0.95rem',
-    lineHeight: '1.6',
+    color: '#e2e8f0',
+    fontSize: '0.85rem',
+    lineHeight: '1.4',
     margin: 0,
-    textAlign: 'left'
+    textAlign: 'left',
   } : {};
 
   return (
@@ -58,10 +60,10 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
         <motion.div
           className={isMobile ? "" : "fi-brand-overlay"}
           style={containerStyle}
-          initial={isMobile ? { opacity: 0, y: 100 } : { opacity: 0, x: 50 }}
+          initial={isMobile ? { opacity: 0, y: 50 } : { opacity: 0, x: 50 }}
           animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, x: 0 }}
-          exit={isMobile ? { opacity: 0, y: 100 } : { opacity: 0, x: 50 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
+          exit={isMobile ? { opacity: 0, y: 50 } : { opacity: 0, x: 50 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         >
           <div className={isMobile ? "" : "fi-brand-overlay__content"}>
             <h2 style={nameStyle} className={isMobile ? "" : "fi-brand-overlay__name"}>
