@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import PhaserGame, { type IRefPhaserGame } from './components/PhaserGame';
 import MissionIntro from './components/MissionIntro';
 import ProgressBar from './components/ProgressBar';
+import { BrandOverlay } from './components/BrandOverlay';
 
 import { EventBus } from './game/EventBus';
 import { loadProgress, saveProgress, type GameProgress } from './game/utils/storage';
-import type { Brand } from './data/brandData';
+import { pillars, type Brand } from './data/brandData';
 import './index.css';
 
 type AppPhase = 'mission' | 'hub' | 'pillar' | 'final';
@@ -51,8 +52,32 @@ export default function App() {
       setPhase('pillar');
     };
 
-    const onBrandSelected = (brand: Brand): void => {
+    const onBrandSelected = (brand: Brand | null): void => {
       setActiveBrand(brand);
+      if (brand) {
+          // Marcar el pilar como completado inmediatamente al seleccionar marca (o podrías hacerlo al terminar)
+          // Según el requisito: "Cuando el usuario termine la historia de una marca, marcar TODO el pilar como completado."
+      }
+    };
+
+    const onDialogueFinished = (): void => {
+      if (activeBrand) {
+          const pillarId = pillars.find(p => p.brands.some(b => b.id === activeBrand.id))?.id;
+          if (pillarId) {
+            setProgress((prev) => {
+                if (!prev) return prev;
+                if (prev.pillarsCompleted.includes(pillarId)) return prev;
+                const updated: GameProgress = {
+                  ...prev,
+                  pillarsCompleted: [...prev.pillarsCompleted, pillarId],
+                };
+                saveProgress(updated);
+                return updated;
+              });
+          }
+          setActiveBrand(null);
+          setPhase('hub');
+      }
     };
 
     const onPillarProgress = (data: { pillar: string; completed: number; total: number }): void => {
@@ -106,6 +131,7 @@ export default function App() {
 
     EventBus.on('portal-entered', onPortalEntered);
     EventBus.on('brand-selected', onBrandSelected);
+    EventBus.on('dialogue-finished', onDialogueFinished);
     EventBus.on('pillar-progress-updated', onPillarProgress);
     EventBus.on('pillar-completed', onPillarCompleted);
     EventBus.on('frase-clave-collected', onFraseClaveCollected);
@@ -114,6 +140,7 @@ export default function App() {
     return () => {
       EventBus.off('portal-entered', onPortalEntered);
       EventBus.off('brand-selected', onBrandSelected);
+      EventBus.off('dialogue-finished', onDialogueFinished);
       EventBus.off('pillar-progress-updated', onPillarProgress);
       EventBus.off('pillar-completed', onPillarCompleted);
       EventBus.off('frase-clave-collected', onFraseClaveCollected);
@@ -143,13 +170,16 @@ export default function App() {
 
       {(phase === 'hub' || phase === 'pillar') && (
         <div className="fi-game-stage">
-          <ProgressBar
-            completedPillars={completedPillars}
-            totalPillars={4}
-            currentPillar={currentPillar}
-            frasesClaveCount={progress?.frasesClave.length ?? 0}
-          />
+          {phase === 'pillar' && !activeBrand && (
+            <ProgressBar
+              completedPillars={completedPillars}
+              totalPillars={4}
+              currentPillar={currentPillar}
+              frasesClaveCount={progress?.frasesClave.length ?? 0}
+            />
+          )}
           <PhaserGame ref={gameRef} />
+          <BrandOverlay brand={activeBrand} />
         </div>
       )}
 

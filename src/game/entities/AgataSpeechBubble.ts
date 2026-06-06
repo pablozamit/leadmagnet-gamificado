@@ -13,6 +13,7 @@ export class AgataSpeechBubble {
   private readonly nameText: Phaser.GameObjects.Text;
   private readonly bodyText: Phaser.GameObjects.Text;
   private readonly hintText: Phaser.GameObjects.Text;
+  private highlightGraphics: Phaser.GameObjects.Graphics | null = null;
   private readonly choiceTexts: Phaser.GameObjects.Text[] = [];
   private choiceZones: Phaser.GameObjects.Zone[] = [];
   private onAdvance: (() => void) | null = null;
@@ -44,6 +45,38 @@ export class AgataSpeechBubble {
       fontStyle: 'italic',
     });
     this.container.add([this.bg, this.nameText, this.bodyText, this.hintText]);
+  }
+
+  public showHighlight(): void {
+    if (this.highlightGraphics) return;
+
+    this.highlightGraphics = this.scene.add.graphics();
+    this.container.addAt(this.highlightGraphics, 0);
+
+    const w = this.bubbleW;
+    const h = this.bubbleH;
+    const r = 18;
+
+    this.scene.tweens.add({
+      targets: this.highlightGraphics,
+      alpha: { from: 0.2, to: 0.6 },
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      onUpdate: () => {
+        if (!this.highlightGraphics) return;
+        this.highlightGraphics.clear();
+        this.highlightGraphics.lineStyle(6, 0xf6a000, this.highlightGraphics.alpha);
+        this.highlightGraphics.strokeRoundedRect(-3, -3, w + 6, h + 6, r + 2);
+      }
+    });
+  }
+
+  public hideHighlight(): void {
+    if (this.highlightGraphics) {
+      this.highlightGraphics.destroy();
+      this.highlightGraphics = null;
+    }
   }
 
   public show(

@@ -2172,3 +2172,72 @@
   text-align: center;
   margin-top: -4px;
 }
+
+/* ============================================
+   BRAND OVERLAY (REDESIGN)
+   ============================================ */
+.fi-brand-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(10, 10, 30, 0.8) 20%, rgba(10, 10, 30, 0.95) 100%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 40px;
+  pointer-events: none;
+}
+
+.fi-brand-overlay__content {
+  max-width: 440px;
+  text-align: right;
+  pointer-events: auto;
+}
+
+.fi-brand-overlay__name {
+  font-family: var(--fi-font-serif);
+  font-size: clamp(32px, 5vw, 64px);
+  color: var(--fi-gold);
+  margin-bottom: 20px;
+  line-height: 1.1;
+}
+
+.fi-brand-overlay__description {
+  font-family: var(--fi-font-sans);
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.7;
+  color: #e0e0e0;
+  margin: 0;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .fi-brand-overlay {
+    max-width: 100%;
+    height: auto;
+    bottom: 0;
+    top: auto;
+    background: linear-gradient(0deg, rgba(10, 10, 30, 0.98) 60%, transparent 100%);
+    padding: 30px 20px 40px;
+    align-items: flex-end;
+  }
+
+  .fi-brand-overlay__content {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .fi-brand-overlay__name {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .fi-brand-overlay__description {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+}

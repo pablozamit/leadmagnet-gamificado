@@ -59,8 +59,8 @@ export class HubScene extends Phaser.Scene {
           welcome: {
             id: 'welcome',
             speaker: 'agata',
-            text: '¡Muy bien! Esa historia ha sido inspiradora. ¿Por qué otro pilar quieres seguir?',
-            options: [{ text: '¡A por otro!', nextId: '' }]
+            text: 'Muy bien, ¿por qué otro pilar quieres seguir?',
+            options: [{ text: 'Continuar', nextId: '' }]
           }
         }
       };
