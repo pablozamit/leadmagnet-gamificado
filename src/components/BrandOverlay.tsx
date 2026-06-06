@@ -20,7 +20,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
           <div className="fi-brand-overlay__content">
             <h2 className="fi-brand-overlay__name">{brand.name}</h2>
             <p className="fi-brand-overlay__description">
-              {brand.result?.contexto}
+              {brand.descripcion}
             </p>
           </div>
         </motion.div>
