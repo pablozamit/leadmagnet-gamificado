@@ -29,6 +29,8 @@ export class AgataGuide {
   private currentNodeId: string | null = null;
   private activeBrandId: string | null = null;
   private visible = false;
+  private autoAdvanceTimer: Phaser.Time.TimerEvent | null = null;
+  private highlightTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -126,10 +128,26 @@ export class AgataGuide {
     }
     this.currentNodeId = nodeId;
 
+    this.clearTimers();
+
+    const hasChoices = Boolean(node.options && node.options.length > 0);
+
+    if (hasChoices) {
+      // Si hay opciones, no podemos avanzar automáticamente, pero sí resaltar después de 5s
+      this.highlightTimer = this.scene.time.delayedCall(5000, () => {
+        this.bubble.showHighlight();
+      });
+    } else {
+      // Si no hay opciones, avanzamos automáticamente después de 5s
+      this.autoAdvanceTimer = this.scene.time.delayedCall(5000, () => {
+        this.advanceFromNode(node);
+      });
+    }
+
     if (node.onComplete === 'frase-clave-collected' && this.activeBrandId) {
       const brand = findBrandById(this.activeBrandId);
       if (brand) {
-        EventBus.emit('frase-clave-collected', brand.result.fraseClave);
+        EventBus.emit('frase-clave-collected', brand.name);
       }
     }
 
@@ -142,6 +160,7 @@ export class AgataGuide {
   }
 
   private advanceFromNode(node: DialogueNode): void {
+    this.clearTimers();
     if (node.options && node.options.length > 0) return;
     if (node.nextId === 'exit' || node.nextId === 'end' || !node.nextId) {
       this.endDialogue();
@@ -151,6 +170,7 @@ export class AgataGuide {
   }
 
   private handleChoice(nextId: string): void {
+    this.clearTimers();
     if (!nextId) {
       this.endDialogue();
       return;
@@ -164,6 +184,7 @@ export class AgataGuide {
   }
 
   private endDialogue(): void {
+    this.clearTimers();
     const callback = (this.activeDialogue as any)?._onFinished;
     const isBrandDialogue = !!this.activeBrandId;
     const lastNodeId = this.currentNodeId;
@@ -273,6 +294,18 @@ export class AgataGuide {
   private onResize = (): void => {
     this.applyLayout();
   };
+
+  private clearTimers(): void {
+    if (this.autoAdvanceTimer) {
+      this.autoAdvanceTimer.destroy();
+      this.autoAdvanceTimer = null;
+    }
+    if (this.highlightTimer) {
+      this.highlightTimer.destroy();
+      this.highlightTimer = null;
+    }
+    this.bubble.hideHighlight();
+  }
 
   private onHubIntro = (): void => {
     this.playDialogue(hubIntroDialogue);

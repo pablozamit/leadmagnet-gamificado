@@ -45,32 +45,8 @@ export class RoomScene extends Phaser.Scene {
     EventBus.emit('brand-selected', this.brand);
   }
 
-  private createRoomDecor(zones: ReturnType<typeof getSafeZones>): void {
-    const { width } = this.scale;
-    if (!zones.isMobile) {
-      this.add
-        .text(width / 2, zones.hudTop + 6, this.brand.name, {
-          fontSize: '13px',
-          fontFamily: 'Montserrat, system-ui, sans-serif',
-          color: '#aaaaaa',
-        })
-        .setOrigin(0.5, 0);
-    }
-
-    const slots = 3;
-    for (let i = 0; i < slots; i++) {
-      const x = this.playBounds.x + (this.playBounds.width / (slots + 1)) * (i + 1);
-      const y = this.playBounds.y + this.playBounds.height * 0.42;
-      const rect = this.add.rectangle(x, y, 100, 130, 0x1a1a3a, 0.45);
-      rect.setStrokeStyle(2, 0x3a3a6a, 0.8);
-      this.tweens.add({
-        targets: rect,
-        alpha: 0.75,
-        duration: 2000 + i * 400,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
+  private createRoomDecor(_zones: ReturnType<typeof getSafeZones>): void {
+    // Eliminados rectángulos y título antiguo para el nuevo diseño limpio.
   }
 
   private createBackControl(zones: ReturnType<typeof getSafeZones>): void {

@@ -161,16 +161,20 @@ export class Portal {
 
     // Añadir checkmark
     if (!this.checkmark) {
-      this.checkmark = this.scene.add.text(0, 78, '✓ COMPLETADO', {
-        fontSize: '11px',
+      this.checkmark = this.scene.add.text(0, 52, '✓', {
+        fontSize: '44px',
         fontFamily: 'Montserrat, system-ui, sans-serif',
         color: '#44ff44',
         fontStyle: 'bold',
         stroke: '#000000',
-        strokeThickness: 2,
+        strokeThickness: 6,
       });
       this.checkmark.setOrigin(0.5, 0.5);
       this.container.add(this.checkmark);
+
+      this.label.setText(`${this.config.label}\n(COMPLETADO)`);
+      this.label.setColor('#44ff44');
+      this.label.setPosition(0, 95);
     }
 
     // Desactivar interactividad

@@ -25,9 +25,9 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const agataLaneWidth = Math.round(w * (isMobile ? 0.35 : 0.28));
 
   const playArea = new Phaser.Geom.Rectangle(
-    agataLaneWidth + (isMobile ? 10 : PLAY_MARGIN),
+    isMobile ? 0 : agataLaneWidth + PLAY_MARGIN,
     PLAY_MARGIN,
-    w - agataLaneWidth - (isMobile ? 20 : PLAY_MARGIN),
+    isMobile ? w : w - agataLaneWidth - PLAY_MARGIN,
     h - PLAY_MARGIN * 2,
   );
 
