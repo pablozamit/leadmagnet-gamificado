@@ -60,7 +60,6 @@ export class HubScene extends Phaser.Scene {
             id: 'welcome',
             speaker: 'agata',
             text: 'Muy bien, ¿por qué otro pilar quieres seguir?',
-            options: [{ text: 'Continuar', nextId: '' }]
           }
         }
       };
@@ -127,8 +126,7 @@ export class HubScene extends Phaser.Scene {
   };
 
   private handlePortalClick(pillarId: PillarId): void {
-    if (this.agata?.isDialogueBlocking()) return;
-
+    // 🌟 CORRECCIÓN: Eliminado el "if (this.agata?.isDialogueBlocking()) return;" para permitir clics libres
     this.agata?.playState('jump');
 
     const farewell: any = {
