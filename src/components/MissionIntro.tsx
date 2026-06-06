@@ -55,25 +55,54 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
   };
 
   const handleSubmit = (e: React.FormEvent): void => {
-  e.preventDefault();
-  const newErrors: { name?: string; email?: string } = {};
-  if (!name.trim()) newErrors.name = 'Tu nombre es necesario';
-  if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    newErrors.email = 'Necesitamos un email válido';
-  }
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
-  
-  // Creamos el progreso e iniciamos el juego INSTANTÁNEAMENTE
-  const progress = createInitialProgress(name, email);
-  saveProgress(progress);
-  EventBus.emit('lead-capture-complete', progress);
-  
-  // Llamamos al callback inmediatamente sin pasar por la fase 'welcome'
-  onComplete(progress);
-};
+    e.preventDefault();
+    const newErrors: { name?: string; email?: string } = {};
+    if (!name.trim()) newErrors.name = 'Tu nombre es necesario';
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Necesitamos un email válido';
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    // 🚀 CONEXIÓN SILENCIOSA CON ACTIVECAMPAIGN
+    const enviarAActiveCampaign = async () => {
+      const formData = new FormData();
+      formData.append('u', '43');
+      formData.append('f', '43');
+      formData.append('s', '');
+      formData.append('c', '0');
+      formData.append('m', '0');
+      formData.append('act', 'sub');
+      formData.append('v', '2');
+      formData.append('or', '3ff2a20e-9599-4c3f-9f0b-cd9c22fe53be');
+      formData.append('fullname', name.trim());
+      formData.append('email', email.trim());
+
+      try {
+        // 'no-cors' simula el envío del formulario nativo impidiendo que el navegador bloquee la petición
+        await fetch('https://dinamizaciond.activehosted.com/proc.php', {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors',
+        });
+      } catch (error) {
+        console.error('Error al registrar lead en ActiveCampaign:', error);
+      }
+    };
+
+    // Ejecutamos el envío en segundo plano (fire-and-forget) para no retrasar el inicio del juego
+    enviarAActiveCampaign();
+    
+    // Creamos el progreso e iniciamos el juego INSTANTÁNEAMENTE
+    const progress = createInitialProgress(name, email);
+    saveProgress(progress);
+    EventBus.emit('lead-capture-complete', progress);
+    
+    // Llamamos al callback inmediatamente sin pasar por la fase 'welcome'
+    onComplete(progress);
+  };
 
   return (
     <div className="fi-screen fi-screen--mission">
