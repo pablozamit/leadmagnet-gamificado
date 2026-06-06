@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import PhaserGame, { type IRefPhaserGame } from './components/PhaserGame';
 import MissionIntro from './components/MissionIntro';
-import ProgressBar from './components/ProgressBar';
 import { BrandOverlay } from './components/BrandOverlay';
 
 import { EventBus } from './game/EventBus';
@@ -15,13 +14,10 @@ type AppPhase = 'mission' | 'hub' | 'pillar' | 'final';
  * `App` - Orquestador principal del flujo del juego.
  *
  * Fases:
- *  - `mission`: MissionIntro (landing + form)
- *  - `hub`: PhaserGame corriendo HubScene
- *  - `pillar`: PhaserGame corriendo PillarScene + BrandPanel overlay
- *  - `final`: FinalScreen (futuro)
- *
- * Toda la comunicación con Phaser se hace vía EventBus. El ref del juego
- * solo se usa para iniciar/detener escenas (no para mutar estado).
+ * - `mission`: MissionIntro (landing + formulario integrado)
+ * - `hub`: PhaserGame corriendo HubScene
+ * - `pillar`: PhaserGame corriendo PillarScene o RoomScene
+ * - `final`: Pantalla de cierre de alta conversión con pitch directo
  */
 export default function App() {
   const [phase, setPhase] = useState<AppPhase>('mission');
@@ -39,10 +35,20 @@ export default function App() {
     }
   }, []);
 
-  // Suscribirse a eventos del juego
+  // Sincronizar el progreso con la instancia viva del juego Phaser
   useEffect(() => {
     if (gameRef.current.game) {
       (gameRef.current.game as any).progress = progress;
+    }
+  }, [progress]);
+
+  // 🌟 CORRECCIÓN: Disparador automático de fin de juego. Al completar los 4 pilares, salta a la pantalla final.
+  useEffect(() => {
+    if (progress && progress.pillarsCompleted.length === 4) {
+      const timer = setTimeout(() => {
+        setPhase('final');
+      }, 1200);
+      return () => clearTimeout(timer);
     }
   }, [progress]);
 
@@ -54,29 +60,25 @@ export default function App() {
 
     const onBrandSelected = (brand: Brand | null): void => {
       setActiveBrand(brand);
-      if (brand) {
-          // Marcar el pilar como completado inmediatamente al seleccionar marca (o podrías hacerlo al terminar)
-          // Según el requisito: "Cuando el usuario termine la historia de una marca, marcar TODO el pilar como completado."
-      }
     };
 
     const onDialogueFinished = (): void => {
       if (activeBrand) {
-          const pillarId = pillars.find(p => p.brands.some(b => b.id === activeBrand.id))?.id;
-          if (pillarId) {
-            setProgress((prev) => {
-                if (!prev) return prev;
-                if (prev.pillarsCompleted.includes(pillarId)) return prev;
-                const updated: GameProgress = {
-                  ...prev,
-                  pillarsCompleted: [...prev.pillarsCompleted, pillarId],
-                };
-                saveProgress(updated);
-                return updated;
-              });
-          }
-          setActiveBrand(null);
-          setPhase('hub');
+        const pillarId = pillars.find(p => p.brands.some(b => b.id === activeBrand.id))?.id;
+        if (pillarId) {
+          setProgress((prev) => {
+            if (!prev) return prev;
+            if (prev.pillarsCompleted.includes(pillarId)) return prev;
+            const updated: GameProgress = {
+              ...prev,
+              pillarsCompleted: [...prev.pillarsCompleted, pillarId],
+            };
+            saveProgress(updated);
+            return updated;
+          });
+        }
+        setActiveBrand(null);
+        setPhase('hub');
       }
     };
 
@@ -146,9 +148,9 @@ export default function App() {
       EventBus.off('frase-clave-collected', onFraseClaveCollected);
       EventBus.off('current-scene-ready', onSceneReady);
     };
-  }, []);
+  }, [activeBrand]);
 
-  // Cuando entramos al hub, iniciamos HubScene
+  // Manejador del cambio de escena interna en Phaser
   useEffect(() => {
     const sm = gameRef.current.scene?.scene;
     if (phase !== 'hub' || !sm) return;
@@ -162,22 +164,52 @@ export default function App() {
     EventBus.emit('lead-capture-complete');
   };
 
-  const completedPillars = progress?.pillarsCompleted.length ?? 0;
-
   return (
     <div className="fi-app">
       {phase === 'mission' && <MissionIntro onComplete={handleMissionComplete} />}
 
       {(phase === 'hub' || phase === 'pillar') && (
         <div className="fi-game-stage">
+          {/* 🌟 CORRECCIÓN: El Header flotante residual antiguo ha sido erradicado por completo para liberar la pantalla */}
           <PhaserGame ref={gameRef} />
           <BrandOverlay brand={activeBrand} />
         </div>
       )}
 
+      {/* 🌟 CORRECCIÓN: Estructura real y copies estratégicos para la pantalla final interactiva */}
       {phase === 'final' && (
-        <div className="fi-screen fi-screen--final">
-          <p>Pantalla final — pendiente para slice 6</p>
+        <div className="fi-screen fi-screen--final" style={{ background: '#0a0a1e', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: '#fff', textAlign: 'center' }}>
+          <div style={{ maxWidth: '640px', width: '100%' }}>
+            <h2 className="fi-final-title" style={{ fontFamily: "var(--fi-font-serif)", fontSize: '2.2rem', marginBottom: '2rem', lineHeight: '1.4', fontWeight: '400' }}>
+              ¿Quieres saber cómo aplicar todas estas estrategias y muchas otras a cualquier proyecto?
+              <br />
+              <span style={{ color: '#f6a000', display: 'block', marginTop: '1.5rem', fontWeight: 'bold' }}>
+                Te presento el Experto Universitario en Dinamización Digital y Social
+              </span>
+            </h2>
+            
+            <p style={{ color: '#ccc', fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '2.5rem' }}>
+              Has visto cómo los líderes del mercado aplican la gamificación, la celebración, el acompañamiento y la co-creación de comunidades. Domina hoy el sistema completo y las herramientas interactivas que transformarán tus resultados.
+            </p>
+
+            <a
+              href="https://agatapuig.com/experto-universitario-en-dinamizacion-digital-2025/"
+              className="fi-cta-btn fi-cta-btn--gold fi-cta-btn--giant"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', width: 'auto', padding: '20px 40px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', color: '#1a1a2e' }}
+            >
+              Descubrir el Experto Universitario
+              <svg className="fi-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginLeft: '10px' }}>
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </a>
+            
+            <p style={{ fontSize: '13px', color: '#666', marginTop: '2.5rem', opacity: 0.7, fontStyle: 'italic' }}>
+              Las plazas son limitadas. Cada edición se completa antes del cierre.
+            </p>
+          </div>
         </div>
       )}
     </div>
