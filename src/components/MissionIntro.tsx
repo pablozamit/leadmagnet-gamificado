@@ -55,22 +55,25 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
   };
 
   const handleSubmit = (e: React.FormEvent): void => {
-    e.preventDefault();
-    const newErrors: { name?: string; email?: string } = {};
-    if (!name.trim()) newErrors.name = 'Tu nombre es necesario';
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Necesitamos un email válido';
-    }
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    const progress = createInitialProgress(name, email);
-    saveProgress(progress);
-    setPhase('welcome');
-    EventBus.emit('lead-capture-complete', progress);
-    setTimeout(() => onComplete(progress), 1600);
-  };
+  e.preventDefault();
+  const newErrors: { name?: string; email?: string } = {};
+  if (!name.trim()) newErrors.name = 'Tu nombre es necesario';
+  if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    newErrors.email = 'Necesitamos un email válido';
+  }
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+  
+  // Creamos el progreso e iniciamos el juego INSTANTÁNEAMENTE
+  const progress = createInitialProgress(name, email);
+  saveProgress(progress);
+  EventBus.emit('lead-capture-complete', progress);
+  
+  // Llamamos al callback inmediatamente sin pasar por la fase 'welcome'
+  onComplete(progress);
+};
 
   return (
     <div className="fi-screen fi-screen--mission">
@@ -216,49 +219,7 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
           </motion.div>
         )}
 
-        {phase === 'welcome' && (
-          <motion.div
-            key="welcome"
-            className="fi-mission-welcome"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="fi-particles">
-              {particles.map((p) => (
-                <motion.span
-                  key={p.id}
-                  className="fi-particle"
-                  style={{
-                    left: `${p.x}%`,
-                    top: `${p.y}%`,
-                    width: p.size,
-                    height: p.size,
-                  }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
-                  transition={{ duration: p.duration, delay: p.delay, repeat: 0 }}
-                />
-              ))}
-            </div>
-            <motion.h2
-              className="fi-welcome-title"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            >
-              Bienvenido/a a la Misión, <span className="fi-text-gold">{name}</span>.
-            </motion.h2>
-            <motion.p
-              className="fi-welcome-subtitle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.6 }}
-            >
-              Tu aventura comienza ahora.
-            </motion.p>
-          </motion.div>
-        )}
+
       </AnimatePresence>
         </div>
       </div>
