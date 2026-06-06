@@ -2241,3 +2241,21 @@
     line-height: 1.6;
   }
 }
+
+/* ==========================================================================
+   🌟 CORRECCIÓN OPCIÓN 2: CONTROL DE PROPORCIONES EN PANTALLA DIVIDIDA MÓVIL
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* Cuando el panel de la marca móvil está presente, forzamos al contenedor del juego a encogerse al 60% real */
+  .fi-game-stage:has(.fi-brand-overlay-mobile) #phaser-container {
+    height: 60vh !important;
+    flex: 0 0 60vh !important;
+  }
+
+  /* Forzamos a la resolución interna del canvas a recalcular su proporción sobre los 60vh sin deformar */
+  .fi-game-stage:has(.fi-brand-overlay-mobile) #phaser-container canvas {
+    max-height: 60vh !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
