@@ -120,7 +120,7 @@
    ============================================ */
 .fi-screen--lead {
   background: var(--fi-bg);
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* Decorative top gradient wash */
@@ -769,7 +769,7 @@
    ============================================ */
 .fi-screen--final {
   background: var(--fi-bg);
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* Dramatic background effect */
@@ -1158,7 +1158,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
-  overflow: hidden;
+  overflow: overflow-y: auto;
 }
 
 .fi-mission-layout {
