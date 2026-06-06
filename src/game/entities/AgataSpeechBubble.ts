@@ -117,8 +117,8 @@ export class AgataSpeechBubble {
 
     // En móvil limitamos la altura máxima de la burbuja al 30% de pantalla
     if (isMobile) {
-      this.bubbleH = Math.min(this.bubbleH, this.scene.scale.height * 0.30);
-    }
+      this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
+}
 
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
