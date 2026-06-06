@@ -149,10 +149,9 @@ export class AgataGuide {
     });
     this.bubble.enableTapAdvance();
 
-    // 🌟 CORRECCIÓN DE FLUJO (Auto-avance): Si el texto es plano (no tiene botones con opciones,
-    // como las frases explicativas al pulsar un pilar), programamos el temporizador de Phaser
-    // para que avance de forma totalmente automática pasados 5 segundos (5000ms).
-    if (!node.options || node.options.length === 0) {
+    // 🌟 CORRECCIÓN EXACTA: El avance automático de 5 segundos deja de ser universal.
+    // Solo se ejecutará si el nodo de diálogo tiene la propiedad 'autoAdvance' activa.
+    if ((node as any).autoAdvance) {
       this.autoAdvanceTimer = this.scene.time.delayedCall(5000, () => {
         this.advanceFromNode(node);
       });
