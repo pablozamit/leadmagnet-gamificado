@@ -30,7 +30,7 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
       <AnimatePresence>
         {brand && (
           <>
-            {/* Overlay semi-transparente encima del canvas */}
+            {/* Overlay semitransparente encima del canvas */}
             <motion.div
               key="backdrop"
               initial={{ opacity: 0 }}
@@ -58,7 +58,6 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                /* ocupa máximo el 55% de la pantalla para que el personaje quede visible */
                 maxHeight: '55dvh',
                 background: 'linear-gradient(170deg, #14142e 0%, #0a0a1e 100%)',
                 borderTop: '2px solid rgba(246,160,0,0.6)',
@@ -138,45 +137,40 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
                   {brand.descripcion}
                 </p>
 
-                {/* Pilares / frases clave si existen */}
-                {brand.frasesClave && brand.frasesClave.length > 0 && (
+                {/* Frase clave */}
+                <div
+                  style={{
+                    background: 'rgba(246,160,0,0.07)',
+                    border: '1px solid rgba(246,160,0,0.25)',
+                    borderRadius: 12,
+                    padding: '12px 14px',
+                  }}
+                >
                   <div
                     style={{
-                      background: 'rgba(246,160,0,0.07)',
-                      border: '1px solid rgba(246,160,0,0.25)',
-                      borderRadius: 12,
-                      padding: '12px 14px',
+                      fontSize: 10,
+                      letterSpacing: 2,
+                      color: '#f6a000',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                      marginBottom: 8,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 10,
-                        letterSpacing: 2,
-                        color: '#f6a000',
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                        marginBottom: 8,
-                      }}
-                    >
-                      Frases clave
-                    </div>
-                    {brand.frasesClave.map((frase, i) => (
-                      <p
-                        key={i}
-                        style={{
-                          margin: i < brand.frasesClave.length - 1 ? '0 0 6px' : 0,
-                          fontSize: 13,
-                          lineHeight: 1.55,
-                          color: '#ffe082',
-                          fontFamily: "'DM Serif Display', Georgia, serif",
-                          fontStyle: 'italic',
-                        }}
-                      >
-                        "{frase}"
-                      </p>
-                    ))}
+                    Frase clave
                   </div>
-                )}
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 14,
+                      lineHeight: 1.55,
+                      color: '#ffe082',
+                      fontFamily: "'DM Serif Display', Georgia, serif",
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {brand.result.fraseClave}
+                  </p>
+                </div>
               </div>
             </motion.div>
           </>
@@ -200,46 +194,41 @@ export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
             <h2 className="fi-brand-overlay__name">{brand.name}</h2>
             <p className="fi-brand-overlay__description">{brand.descripcion}</p>
 
-            {brand.frasesClave && brand.frasesClave.length > 0 && (
+            <div
+              style={{
+                marginTop: 24,
+                padding: '16px 20px',
+                background: 'rgba(246,160,0,0.07)',
+                border: '1px solid rgba(246,160,0,0.25)',
+                borderRadius: 12,
+                textAlign: 'right',
+              }}
+            >
               <div
                 style={{
-                  marginTop: 24,
-                  padding: '16px 20px',
-                  background: 'rgba(246,160,0,0.07)',
-                  border: '1px solid rgba(246,160,0,0.25)',
-                  borderRadius: 12,
-                  textAlign: 'right',
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: '#f6a000',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  marginBottom: 10,
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: 2,
-                    color: '#f6a000',
-                    textTransform: 'uppercase',
-                    fontWeight: 700,
-                    marginBottom: 10,
-                  }}
-                >
-                  Frases clave
-                </div>
-                {brand.frasesClave.map((frase, i) => (
-                  <p
-                    key={i}
-                    style={{
-                      margin: i < brand.frasesClave.length - 1 ? '0 0 6px' : 0,
-                      fontSize: 15,
-                      lineHeight: 1.5,
-                      color: '#ffe082',
-                      fontFamily: "'DM Serif Display', Georgia, serif",
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    "{frase}"
-                  </p>
-                ))}
+                Frase clave
               </div>
-            )}
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  lineHeight: 1.5,
+                  color: '#ffe082',
+                  fontFamily: "'DM Serif Display', Georgia, serif",
+                  fontStyle: 'italic',
+                }}
+              >
+                {brand.result.fraseClave}
+              </p>
+            </div>
           </div>
         </motion.div>
       )}
