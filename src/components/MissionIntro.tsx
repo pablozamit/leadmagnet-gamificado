@@ -93,7 +93,7 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
     transition={{ duration: 0.6 }}
   >
     <h1 className="fi-mission-title" style={{ fontSize: '2.5rem', lineHeight: '1.2' }}>
-      <span className="fi-mission-main" style={{ block: 'inline-block', marginBottom: '0.5rem' }}>
+      <span className="fi-mission-main" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
         Tácticas de Retención que usan las Grandes Marcas
       </span>
     </h1>
