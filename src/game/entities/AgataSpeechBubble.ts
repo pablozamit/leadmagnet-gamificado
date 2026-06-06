@@ -3,8 +3,9 @@ import type { DialogueNode, DialogueOption } from '../../data/dialogueData';
 
 const BUBBLE_DEPTH = 120;
 const PADDING = 16;
+
 /**
- * Burbuja de diálogo dibujada en Phaser, anclada al personaje.
+ * Burbuja de diálogo dibujada en Phaser, adaptativa para PC y móvil.
  */
 export class AgataSpeechBubble {
   public readonly container: Phaser.GameObjects.Container;
@@ -91,7 +92,7 @@ export class AgataSpeechBubble {
     this.clearChoices();
 
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = Math.min(maxWidth, isMobile ? 350 : 320);
+    this.bubbleW = Math.min(maxWidth, isMobile ? 330 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
 
     this.nameText.setText('ÁGATA');
@@ -154,6 +155,7 @@ export class AgataSpeechBubble {
   }
 
   private redrawBubble(): void {
+    const isMobile = this.scene.scale.width <= 480;
     const w = this.bubbleW;
     const h = this.bubbleH;
     const r = 18;
@@ -163,12 +165,14 @@ export class AgataSpeechBubble {
     this.bg.fillRoundedRect(0, 0, w, h, r);
     this.bg.strokeRoundedRect(0, 0, w, h, r);
 
-    // Comic tail (más fina y centrada hacia Ágata)
-    const tailX = w * 0.15;
-    this.bg.fillTriangle(tailX, h, tailX + 24, h, tailX + 8, h + 12);
-    this.bg.lineStyle(2, 0x705893, 0.45);
-    this.bg.lineBetween(tailX, h, tailX + 8, h + 12);
-    this.bg.lineBetween(tailX + 24, h, tailX + 8, h + 12);
+    // Ocultar la cola en móvil para que actúe como caja limpia superior
+    if (!isMobile) {
+      const tailX = w * 0.15;
+      this.bg.fillTriangle(tailX, h, tailX + 24, h, tailX + 8, h + 12);
+      this.bg.lineStyle(2, 0x705893, 0.45);
+      this.bg.lineBetween(tailX, h, tailX + 8, h + 12);
+      this.bg.lineBetween(tailX + 24, h, tailX + 8, h + 12);
+    }
 
     this.nameText.setPosition(PADDING, PADDING);
     this.bodyText.setPosition(PADDING, PADDING + 18);
@@ -176,16 +180,25 @@ export class AgataSpeechBubble {
   }
 
   private layoutAt(anchorX: number, anchorTopY: number): void {
+    const isMobile = this.scene.scale.width <= 480;
     const margin = 8;
-    let x = anchorX - this.bubbleW * 0.2;
-    x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
-    const y = anchorTopY - this.bubbleH - 10;
-    this.container.setPosition(x, y);
+    
+    if (isMobile) {
+      // 🌟 Fijado arriba en móvil para no colisionar con la cuadrícula ni personajes
+      const topMargin = this.scene.scale.height * 0.04;
+      const x = (this.scene.scale.width - this.bubbleW) / 2;
+      this.container.setPosition(x, topMargin);
+    } else {
+      let x = anchorX - this.bubbleW * 0.2;
+      x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
+      const y = anchorTopY - this.bubbleH - 10;
+      this.container.setPosition(x, y);
+    }
   }
 
   public setPosition(anchorX: number, anchorTopY: number, maxWidth: number): void {
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = Math.min(maxWidth, isMobile ? 350 : 320);
+    this.bubbleW = Math.min(maxWidth, isMobile ? 330 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
@@ -195,7 +208,6 @@ export class AgataSpeechBubble {
     this.choiceZones.forEach((z) => z.destroy());
     this.choiceZones.length = 0;
 
-    // Solo creamos la zona si el hintText es visible (no hay opciones)
     if (!this.hintText.visible) return;
 
     const zone = this.scene.add
