@@ -165,7 +165,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 🌟 CORRECCIÓN: Pantalla de cierre fluida, narrativa integrada del email y enlace definitivo corregido */}
+      {/* 🌟 Pantalla de cierre fluida, con la copia enfocada en la aplicación práctica en el negocio */}
       {phase === 'final' && (
         <div className="fi-screen fi-screen--final" style={{ background: '#0a0a1e', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: '#fff', textAlign: 'center' }}>
           <div style={{ maxWidth: '640px', width: '100%' }}>
@@ -178,7 +178,7 @@ export default function App() {
             </p>
 
             <p style={{ color: '#ffffff', fontSize: '1.15rem', lineHeight: '1.7', marginBottom: '2.5rem', opacity: 0.95 }}>
-              Pero antes, si quieres aprender todo lo que hay detrás de estas estrategias, que sepas que están abiertas las plazas para el único curso universitario 100% enfocado en dinamización:
+              Ver y aprender sobre dinamización está muy bien, pero el verdadero cambio llega cuando buscas <strong>la parte práctica</strong>. Si quieres descubrir exactamente qué hay detrás de estas estrategias y <strong>cómo aplicarlas paso a paso en tu propio negocio</strong>, las plazas están abiertas para el único curso universitario 100% enfocado en dinamización digital:
             </p>
 
             <a
