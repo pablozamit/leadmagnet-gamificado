@@ -129,7 +129,7 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
           <label className="fi-field-label" htmlFor="mi-email">Tu email</label>
           <input
             id="mi-email"
-            type="type"
+            type="email"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
