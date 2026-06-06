@@ -210,7 +210,7 @@ export class AgataSpeechBubble {
   public setPosition(anchorX: number, anchorTopY: number, maxWidth: number): void {
     const isMobile = this.scene.scale.width <= 480;
     this.bubbleW = isMobile
-      ? this.scene.scale.width - 24
+      ? this.scene.scale.width - 110 // Sincronizado con el espacio restante calculado en layout.ts
       : Math.min(maxWidth, 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
     this.redrawBubble();
