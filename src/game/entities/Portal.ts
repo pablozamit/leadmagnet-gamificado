@@ -74,6 +74,9 @@ export class Portal {
     });
     this.counter.setOrigin(0.5, 0.5);
     this.container.add(this.counter);
+    
+    // 🌟 CORRECCIÓN: Ocultamos el contador 0/3 de la vista desde el inicio
+    this.counter.setVisible(false);
 
     if (config.locked) {
       this.applyLockedStyle();
@@ -151,15 +154,15 @@ export class Portal {
   public setCompleted(isCompleted: boolean): void {
     if (!isCompleted) return;
 
-    this.config.locked = true;
+    // 🌟 CORRECCIÓN: El pilar NO se bloquea al completarse, se mantiene abierto para re-exploración
     this.counter.setVisible(false);
     this.pulseTween?.stop();
     this.outerRing.setScale(1);
     this.outerRing.setStrokeStyle(3, 0x44ff44, 0.8);
     this.innerGlow.setFillStyle(0x44ff44, 0.15);
-    this.icon.setAlpha(0.6);
+    this.icon.setAlpha(0.8); // Mantenemos el icono nítido y visible
 
-    // Añadir checkmark
+    // Añadir checkmark elegante
     if (!this.checkmark) {
       this.checkmark = this.scene.add.text(0, 52, '✓', {
         fontSize: '44px',
@@ -177,11 +180,7 @@ export class Portal {
       this.label.setPosition(0, 95);
     }
 
-    // Desactivar interactividad
-    const hitbox = this.container.list.find(obj => obj instanceof Phaser.GameObjects.Arc && obj.input) as Phaser.GameObjects.Arc;
-    if (hitbox) {
-      hitbox.disableInteractive();
-    }
+    // 🌟 CORRECCIÓN: Eliminamos las líneas que desactivaban la interactividad del pilar
   }
 
   public destroy(): void {
