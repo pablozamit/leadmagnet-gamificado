@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Brand } from '../data/brandData';
 
@@ -7,6 +7,22 @@ interface BrandOverlayProps {
 }
 
 export const BrandOverlay: React.FC<BrandOverlayProps> = ({ brand }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectamos el tamaño de la pantalla en tiempo real
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Ejecutar al montar
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Si estamos en móvil, no renderizamos el panel derecho para evitar que pise el juego
+  if (isMobile) return null;
+
   return (
     <AnimatePresence>
       {brand && (
