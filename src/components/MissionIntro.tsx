@@ -81,51 +81,74 @@ export default function MissionIntro({ onComplete }: MissionIntroProps) {
         <div className="fi-mission-main">
       <AnimatePresence mode="wait">
         {phase === 'intro' && (
-          <motion.div
-            key="intro"
-            className="fi-mission-inner"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="fi-mission-badge">
-              <span className="fi-mission-badge-dot" />
-              <span>El Nodo Digital · Ágata Puig</span>
-            </div>
+  <motion.div
+    key="intro"
+    className="fi-mission-inner"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.6 }}
+  >
+    <h1 className="fi-mission-title" style={{ fontSize: '2.5rem', lineHeight: '1.2' }}>
+      <span className="fi-mission-main" style={{ block: 'inline-block', marginBottom: '0.5rem' }}>
+        Tácticas de Retención que usan las Grandes Marcas
+      </span>
+    </h1>
 
-            <h1 className="fi-mission-title">
-              <span className="fi-mission-pre">Misión:</span>
-              <br />
-              <span className="fi-mission-main">Conviértete en Experto</span>
-              <br />
-              <span className="fi-mission-accent">en Dinamización Digital</span>
-            </h1>
+    <p className="fi-mission-subtitle" style={{ marginTop: '1rem', marginBottom: '2rem', opacity: 0.9 }}>
+      Aplica hoy las estrategias avanzadas de los líderes del mercado y haz que tu competencia se pregunte cuál es tu secreto.
+    </p>
 
-            <p className="fi-mission-subtitle">
-              En 8 minutos no solo aprenderás… vivirás cómo se aplica la
-              dinamización digital en las mejores marcas del mundo.
-            </p>
+    <div className="fi-form-box" style={{ width: '100%', maxWidth: '480px', margin: '0 auto' }}>
+      <p style={{ textAlign: 'left', marginBottom: '1.5rem', fontSize: '1.05rem', color: 'var(--fi-text-muted, #ccc)' }}>
+        Descubre cómo las grandes marcas utilizan la dinamización digital y social. Te guiaré destripando la estrategia de 4 marcas muy conocidas y te diré cómo puedes utilizar cualquiera de estas estrategias para tu proyecto... Si completas la misión, <strong>¿a qué email quieres que te envíe la información?</strong>
+      </p>
 
-            <motion.button
-              type="button"
-              className="fi-cta-btn fi-cta-btn--gold fi-cta-btn--giant"
-              onClick={() => setPhase('form')}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Comenzar la Misión
-              <svg className="fi-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </motion.button>
+      <form onSubmit={handleSubmit} className="fi-lead-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="fi-field-group" style={{ textAlign: 'left' }}>
+          <label className="fi-field-label" htmlFor="mi-name">Tu nombre</label>
+          <input
+            id="mi-name"
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+            }}
+            placeholder="Ej: María"
+            className={`fi-field-input ${errors.name ? 'fi-field-input--error' : ''}`}
+            autoFocus
+          />
+          {errors.name && <span className="fi-field-error">{errors.name}</span>}
+        </div>
 
-            <p className="fi-mission-disclaimer">
-              ⏱ Duración: 8 minutos &nbsp;·&nbsp; 🎮 Interactivo
-            </p>
-          </motion.div>
-        )}
+        <div className="fi-field-group" style={{ textAlign: 'left' }}>
+          <label className="fi-field-label" htmlFor="mi-email">Tu email</label>
+          <input
+            id="mi-email"
+            type="type"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+            }}
+            placeholder="maria@ejemplo.com"
+            className={`fi-field-input ${errors.email ? 'fi-field-input--error' : ''}`}
+          />
+          {errors.email && <span className="fi-field-error">{errors.email}</span>}
+        </div>
+
+        <button type="submit" className="fi-cta-btn fi-cta-btn--gold fi-cta-btn--giant" style={{ marginTop: '0.5rem' }}>
+          Comenzar la Misión
+          <svg className="fi-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </motion.div>
+)}
 
         {phase === 'form' && (
           <motion.div
