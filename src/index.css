@@ -123,7 +123,6 @@
   overflow-y: auto;
 }
 
-/* Decorative top gradient wash */
 .fi-screen--lead::before {
   content: '';
   position: absolute;
@@ -136,7 +135,6 @@
   pointer-events: none;
 }
 
-/* Decorative gold accent orb */
 .fi-screen--lead::after {
   content: '';
   position: absolute;
@@ -339,7 +337,6 @@
   overflow: hidden;
 }
 
-/* Shimmer effect on gold button */
 .fi-cta-btn--gold::after {
   content: '';
   position: absolute;
@@ -388,7 +385,6 @@
   text-align: center;
 }
 
-/* Shimmer on giant button */
 .fi-cta-btn--giant::after {
   content: '';
   position: absolute;
@@ -433,7 +429,6 @@
   align-items: flex-start;
 }
 
-/* Subtle decorative element */
 .fi-screen--pillar::before {
   content: '';
   position: absolute;
@@ -646,7 +641,6 @@
   position: relative;
 }
 
-/* Top accent line on result card */
 .fi-result-card::before {
   content: '';
   position: absolute;
@@ -772,7 +766,6 @@
   overflow-y: auto;
 }
 
-/* Dramatic background effect */
 .fi-screen--final::before {
   content: '';
   position: absolute;
@@ -1140,7 +1133,6 @@
 /* ============================================
    GAMIFIED MISSION (MVP) - NEW COMPONENTS
    ============================================ */
-
 .fi-app {
   width: 100%;
   min-height: 100vh;
@@ -1150,7 +1142,6 @@
   color: #ffffff;
 }
 
-/* Mission intro (landing) */
 .fi-screen--mission {
   min-height: 100vh;
   position: relative;
@@ -1158,7 +1149,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
-  overflow: overflow-y: auto;
+  overflow-y: auto;
 }
 
 .fi-mission-layout {
@@ -1286,19 +1277,6 @@
   font-style: normal;
 }
 
-.fi-mission-main {
-  display: block;
-  color: #ffffff;
-}
-
-.fi-mission-accent {
-  display: block;
-  background: linear-gradient(90deg, #f6a000, #ffd54f);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .fi-mission-subtitle {
   font-size: clamp(15px, 1.8vw, 19px);
   line-height: 1.6;
@@ -1316,7 +1294,6 @@
   letter-spacing: 1px;
 }
 
-/* Form phase */
 .fi-form-title {
   font-family: var(--fi-font-serif);
   font-size: clamp(24px, 3.5vw, 36px);
@@ -1391,7 +1368,6 @@
   text-align: center;
 }
 
-/* CTA button */
 .fi-cta-btn {
   display: inline-flex;
   align-items: center;
@@ -1430,7 +1406,6 @@
   height: 18px;
 }
 
-/* Welcome phase */
 .fi-mission-welcome {
   position: relative;
   text-align: center;
@@ -1470,7 +1445,6 @@
   color: #f6a000;
 }
 
-/* Game stage: HUD arriba + canvas abajo (sin solapamiento) */
 .fi-game-stage {
   display: flex;
   flex-direction: column;
@@ -1482,7 +1456,6 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* Ágata dialogue overlay */
 .fi-agata-dialogue {
   position: absolute;
   left: 50%;
@@ -1575,7 +1548,6 @@
   display: block;
 }
 
-/* HUD hub — dos bandas (título + pilares) */
 .fi-hud {
   flex: 0 0 auto;
   width: 100%;
@@ -1737,7 +1709,6 @@
   border-radius: 2px;
 }
 
-/* Móvil hub (≤480px, diseñado para 390×844) */
 @media (max-width: 480px) {
   .fi-hud {
     flex-shrink: 0;
@@ -1842,7 +1813,6 @@
   }
 }
 
-/* HUD progress bar (legacy) */
 .fi-hud-progress {
   position: absolute;
   top: 0;
@@ -1966,7 +1936,6 @@
   font-size: 14px;
 }
 
-/* Brand panel */
 .fi-brand-panel-backdrop {
   position: fixed;
   inset: 0;
@@ -2060,7 +2029,6 @@
   margin: 0;
 }
 
-/* Mechanic */
 .fi-mechanic {
   background: rgba(110, 198, 255, 0.05);
   border: 1px solid rgba(110, 198, 255, 0.2);
@@ -2173,9 +2141,6 @@
   margin-top: -4px;
 }
 
-/* ============================================
-   BRAND OVERLAY (REDESIGN)
-   ============================================ */
 .fi-brand-overlay {
   position: absolute;
   top: 0;
@@ -2242,19 +2207,6 @@
   }
 }
 
-/* ============================================================
-   PATCH MÓVIL — BrandOverlay bottom-sheet
-   Añade esto al FINAL de src/index.css
-   ============================================================ */
-
-/*
-  En móvil, cuando aparece el sheet (55dvh), el canvas de Phaser
-  que ocupa el flex restante queda visible en su totalidad arriba.
-  No hace falta :has() ni height hacks — el flex column ya lo resuelve.
-
-  Sí necesitamos asegurarnos de que fi-game-stage sea position:relative
-  para que los absolute del sheet/backdrop estén anclados a él.
-*/
 @media (max-width: 767px) {
   .fi-game-stage {
     position: relative;
