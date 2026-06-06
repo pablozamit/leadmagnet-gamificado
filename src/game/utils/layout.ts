@@ -9,7 +9,7 @@ export interface SafeZones {
   isCoarsePointer: boolean;
 }
 
-const PLAY_MARGIN = 12;
+const PLAY_MARGIN = 10;
 
 export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const w = scale.width;
@@ -21,9 +21,8 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const hudTop = 0;
 
   if (isMobile) {
-    // En móvil: Ágata es pequeña y va abajo-izquierda (esquina).
-    // Los portales ocupan TODA la pantalla centrados — Ágata flota encima sin bloquear.
-    const agataLaneWidth = Math.round(w * 0.28);
+    // Móvil: Ágata flota abajo-izquierda, portales usan toda la pantalla
+    const agataLaneWidth = Math.round(w * 0.26);
     const playArea = new Phaser.Geom.Rectangle(
       PLAY_MARGIN,
       PLAY_MARGIN,
@@ -33,7 +32,7 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
     return { hudTop, agataLaneWidth, playArea, isMobile, isCoarsePointer };
   }
 
-  // Escritorio: sin cambios
+  // Escritorio: Ágata ocupa carril izquierdo
   const agataLaneWidth = Math.round(w * 0.28);
   const playArea = new Phaser.Geom.Rectangle(
     agataLaneWidth + PLAY_MARGIN,
@@ -47,14 +46,29 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
 export function getPillarStationPositions(
   playArea: Phaser.Geom.Rectangle,
   count: number,
+  isMobile = false,
 ): Array<{ x: number; y: number }> {
   if (count <= 0) return [];
   const out: Array<{ x: number; y: number }> = [];
-  for (let i = 0; i < count; i++) {
-    out.push({
-      x: playArea.x + playArea.width * 0.5,
-      y: playArea.y + playArea.height * (0.3 + (i / Math.max(count - 1, 1)) * 0.45),
-    });
+
+  if (isMobile) {
+    // En móvil: marcas centradas verticalmente con bastante espacio
+    const startY = playArea.y + playArea.height * 0.28;
+    const endY   = playArea.y + playArea.height * 0.72;
+    const step   = count > 1 ? (endY - startY) / (count - 1) : 0;
+    for (let i = 0; i < count; i++) {
+      out.push({
+        x: playArea.x + playArea.width * 0.5,
+        y: startY + step * i,
+      });
+    }
+  } else {
+    for (let i = 0; i < count; i++) {
+      out.push({
+        x: playArea.x + playArea.width * 0.5,
+        y: playArea.y + playArea.height * (0.3 + (i / Math.max(count - 1, 1)) * 0.45),
+      });
+    }
   }
   return out;
 }
@@ -67,18 +81,18 @@ export function getAgataNpcPosition(
   const h = scale.height;
 
   if (zones.isMobile) {
-    // Móvil: Ágata pequeña, esquina inferior izquierda, NO bloquea portales
-    const targetHeight = Math.min(h * 0.22, 160);
+    // Móvil: Ágata pequeña, esquina inferior izquierda
+    const targetHeight = Math.min(h * 0.20, 150);
     const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
     return {
-      x: w * 0.14,
-      y: h - 8,
+      x: w * 0.13,
+      y: h - 4,
       scale: spriteScale,
-      bubbleMaxWidth: w * 0.70,
+      bubbleMaxWidth: w * 0.88,
     };
   }
 
-  // Escritorio: sin cambios
+  // Escritorio
   const targetHeight = Math.min(h * 0.42, 340);
   const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
   return {
@@ -94,22 +108,25 @@ export function getHubPortalPositions(
   isMobile = false,
 ): Array<{ x: number; y: number }> {
   if (isMobile) {
-    // Móvil: cuadrícula 2×2 perfectamente centrada en toda la pantalla
-    // Con suficiente separación vertical para que labels no se soapen
+    // Móvil: cuadrícula 2×2 centrada, con espacio para burbuja arriba y Ágata abajo
+    // La burbuja ocupa ~140px arriba, Ágata ocupa ~150px abajo
+    // Dejamos margen: portales entre 20% y 80% del alto
     const cx = playArea.x + playArea.width * 0.5;
-    const cy = playArea.y + playArea.height * 0.5;
-    const spacingX = playArea.width * 0.30;   // separación horizontal
-    const spacingY = playArea.height * 0.28;  // separación vertical generosa
+    const top    = playArea.y + playArea.height * 0.22;
+    const bottom = playArea.y + playArea.height * 0.76;
+    const midY   = (top + bottom) / 2;
+    const halfY  = (bottom - top) * 0.28;
+    const halfX  = playArea.width * 0.27;
 
     return [
-      { x: cx - spacingX, y: cy - spacingY }, // top-left
-      { x: cx + spacingX, y: cy - spacingY }, // top-right
-      { x: cx - spacingX, y: cy + spacingY }, // bottom-left
-      { x: cx + spacingX, y: cy + spacingY }, // bottom-right
+      { x: cx - halfX, y: midY - halfY }, // top-left
+      { x: cx + halfX, y: midY - halfY }, // top-right
+      { x: cx - halfX, y: midY + halfY }, // bottom-left
+      { x: cx + halfX, y: midY + halfY }, // bottom-right
     ];
   }
 
-  // Escritorio: sin cambios
+  // Escritorio
   const cols = [0.25, 0.75];
   const rows = [0.28, 0.72];
   const out: Array<{ x: number; y: number }> = [];
