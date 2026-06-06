@@ -12,28 +12,42 @@ export interface PortalConfig {
   locked?: boolean;
 }
 
-// En móvil los portales son más pequeños para caber en la cuadrícula
-const isMobileDevice = () =>
-  typeof window !== 'undefined' && window.innerWidth <= 480;
+interface PortalSizes {
+  outerRadius: number;
+  innerRadius: number;
+  iconSize: number;
+  hitRadius: number;
+  labelY: number;
+  labelFontSize: string;
+  containerW: number;
+  containerH: number;
+}
 
-function getPortalSizes() {
-  const mobile = isMobileDevice();
+function getPortalSizes(isMobile: boolean): PortalSizes {
+  if (isMobile) {
+    return {
+      outerRadius: 36,
+      innerRadius: 26,
+      iconSize: 44,
+      hitRadius: 38,
+      labelY: 42,
+      labelFontSize: '10px',
+      containerW: 84,
+      containerH: 84,
+    };
+  }
   return {
-    outerRadius: mobile ? 38 : 52,
-    innerRadius: mobile ? 28 : 38,
-    iconSize: mobile ? 48 : 72,
-    hitRadius: mobile ? 36 : 40,
-    labelY: mobile ? 46 : 58,
-    counterY: mobile ? 62 : 78,
-    labelFontSize: mobile ? '11px' : '14px',
-    counterFontSize: mobile ? '10px' : '12px',
-    containerSize: mobile ? 90 : 120,
+    outerRadius: 52,
+    innerRadius: 38,
+    iconSize: 72,
+    hitRadius: 40,
+    labelY: 58,
+    labelFontSize: '14px',
+    containerW: 120,
+    containerH: 120,
   };
 }
 
-/**
- * `Portal` - Portal del Hub con icono PNG y feedback visual.
- */
 export class Portal {
   public readonly container: Phaser.GameObjects.Container;
   public readonly config: PortalConfig;
@@ -45,6 +59,7 @@ export class Portal {
   private readonly counter: Phaser.GameObjects.Text;
   private checkmark: Phaser.GameObjects.Text | null = null;
   private pulseTween: Phaser.Tweens.Tween | null = null;
+  private readonly sizes: PortalSizes;
 
   constructor(
     scene: Phaser.Scene,
@@ -55,10 +70,13 @@ export class Portal {
   ) {
     this.scene = scene;
     this.config = config;
+
+    const isMobile = scene.scale.width <= 480;
+    this.sizes = getPortalSizes(isMobile);
+    const s = this.sizes;
+
     this.container = scene.add.container(x, y);
     this.container.setScale(0);
-
-    const s = getPortalSizes();
 
     this.outerRing = scene.add.circle(0, 0, s.outerRadius, config.color, 0);
     this.outerRing.setStrokeStyle(3, config.glowColor, 0.65);
@@ -72,27 +90,28 @@ export class Portal {
     this.icon.setScale(iconScale);
     this.container.add(this.icon);
 
+    // Label con wordWrap para evitar solapamiento
     this.label = scene.add.text(0, s.labelY, config.label, {
       fontSize: s.labelFontSize,
       fontFamily: 'Montserrat, system-ui, sans-serif',
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#000000',
-      strokeThickness: 3,
+      strokeThickness: isMobile ? 2 : 3,
       align: 'center',
-      wordWrap: { width: s.containerSize - 8 },
+      wordWrap: { width: s.containerW + 10 },
     });
     this.label.setOrigin(0.5, 0);
     this.container.add(this.label);
 
-    this.counter = scene.add.text(0, s.counterY, '0/3', {
-      fontSize: s.counterFontSize,
+    this.counter = scene.add.text(0, s.labelY + (isMobile ? 16 : 22), '0/3', {
+      fontSize: isMobile ? '9px' : '12px',
       fontFamily: 'Montserrat, system-ui, sans-serif',
       color: '#f6a000',
       stroke: '#000000',
       strokeThickness: 2,
     });
-    this.counter.setOrigin(0.5, 0.5);
+    this.counter.setOrigin(0.5, 0);
     this.container.add(this.counter);
     this.counter.setVisible(false);
 
@@ -102,7 +121,7 @@ export class Portal {
       this.startPulse();
     }
 
-    this.container.setSize(s.containerSize, s.containerSize + 30);
+    this.container.setSize(s.containerW, s.containerH);
 
     const hitbox = scene.add.circle(0, 0, s.hitRadius, 0x000000, 0);
     this.container.add(hitbox);
@@ -171,7 +190,6 @@ export class Portal {
 
   public setCompleted(isCompleted: boolean): void {
     if (!isCompleted) return;
-
     this.counter.setVisible(false);
     this.pulseTween?.stop();
     this.outerRing.setScale(1);
@@ -179,21 +197,17 @@ export class Portal {
     this.innerGlow.setFillStyle(0x44ff44, 0.15);
     this.icon.setAlpha(0.8);
 
-    const s = getPortalSizes();
-
     if (!this.checkmark) {
-      this.checkmark = this.scene.add.text(0, s.innerRadius - 4, '✓', {
-        fontSize: isMobileDevice() ? '28px' : '44px',
+      this.checkmark = this.scene.add.text(0, 0, '✓', {
+        fontSize: this.sizes.outerRadius > 40 ? '36px' : '22px',
         fontFamily: 'Montserrat, system-ui, sans-serif',
         color: '#44ff44',
         fontStyle: 'bold',
         stroke: '#000000',
-        strokeThickness: 6,
+        strokeThickness: 5,
       });
       this.checkmark.setOrigin(0.5, 0.5);
       this.container.add(this.checkmark);
-
-      this.label.setText(`${this.config.label}\n✓`);
       this.label.setColor('#44ff44');
     }
   }
