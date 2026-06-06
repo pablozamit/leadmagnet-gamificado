@@ -19,15 +19,17 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const isCoarsePointer =
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
-  /** HUD en React encima del canvas: el juego ya no reserva píxeles extra arriba. */
   const hudTop = 0;
-  // En móvil, Ágata ocupa una porción más clara de la izquierda
-  const agataLaneWidth = Math.round(w * (isMobile ? 0.35 : 0.28));
 
+  // Ágata ocupa la izquierda en ambos casos
+  const agataLaneWidth = Math.round(w * (isMobile ? 0.32 : 0.28));
+
+  // ✅ CORRECCIÓN: en móvil playArea también empieza después de Ágata
+  // (antes era 0 en móvil, lo que hacía que los portales se solaparan con ella)
   const playArea = new Phaser.Geom.Rectangle(
-    isMobile ? 0 : agataLaneWidth + PLAY_MARGIN,
+    agataLaneWidth + PLAY_MARGIN,
     PLAY_MARGIN,
-    isMobile ? w : w - agataLaneWidth - PLAY_MARGIN,
+    w - agataLaneWidth - PLAY_MARGIN * 2,
     h - PLAY_MARGIN * 2,
   );
 
@@ -40,7 +42,6 @@ export function getPillarStationPositions(
   count: number,
 ): Array<{ x: number; y: number }> {
   if (count <= 0) return [];
-  const cols = 1; // Solo una columna para marcas en texto
   const rows = count;
   const out: Array<{ x: number; y: number }> = [];
   for (let i = 0; i < count; i++) {
@@ -60,23 +61,20 @@ export function getAgataNpcPosition(
   zones: SafeZones,
 ): { x: number; y: number; scale: number; bubbleMaxWidth: number } {
   const targetHeight = zones.isMobile
-    ? Math.min(scale.height * 0.35, 240)
+    ? Math.min(scale.height * 0.38, 260)
     : Math.min(scale.height * 0.42, 340);
-
   const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
 
-  // Posición: izquierda, apoyada en el fondo
-  const x = zones.isMobile
-    ? zones.agataLaneWidth * 0.45
-    : zones.agataLaneWidth * 0.52;
-
-  const y = scale.height - (zones.isMobile ? 20 : 40);
+  // Centrada en su carril izquierdo, apoyada en el fondo
+  const x = zones.agataLaneWidth * 0.50;
+  const y = scale.height - (zones.isMobile ? 16 : 40);
 
   return {
     x,
     y,
     scale: spriteScale,
-    bubbleMaxWidth: zones.isMobile ? scale.width * 0.8 : 340,
+    // La burbuja de diálogo se expande hacia la derecha desde Ágata
+    bubbleMaxWidth: zones.isMobile ? scale.width * 0.72 : 340,
   };
 }
 
@@ -84,9 +82,9 @@ export function getAgataNpcPosition(
 export function getHubPortalPositions(
   playArea: Phaser.Geom.Rectangle,
 ): Array<{ x: number; y: number }> {
-  // Cuadrícula 2x2
-  const cols = [0.28, 0.72];
-  const rows = [0.32, 0.68];
+  // Cuadrícula 2×2 dentro del área disponible (ya excluye a Ágata)
+  const cols = [0.25, 0.75];
+  const rows = [0.28, 0.72];
   const out: Array<{ x: number; y: number }> = [];
   for (const row of rows) {
     for (const col of cols) {
