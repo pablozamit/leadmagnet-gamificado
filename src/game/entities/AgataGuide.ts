@@ -130,7 +130,6 @@ export class AgataGuide {
 
     this.clearTimers();
 
-    // 🌟 CORRECCIÓN: Ningún texto pasa solo de forma automática.
     // Pasados 5 segundos de inactividad, se activa el resalte visual/brillo en la burbuja.
     this.highlightTimer = this.scene.time.delayedCall(5000, () => {
       this.bubble.showHighlight();
@@ -149,6 +148,15 @@ export class AgataGuide {
       onChoice: (nextId) => this.handleChoice(nextId),
     });
     this.bubble.enableTapAdvance();
+
+    // 🌟 CORRECCIÓN DE FLUJO (Auto-avance): Si el texto es plano (no tiene botones con opciones,
+    // como las frases explicativas al pulsar un pilar), programamos el temporizador de Phaser
+    // para que avance de forma totalmente automática pasados 5 segundos (5000ms).
+    if (!node.options || node.options.length === 0) {
+      this.autoAdvanceTimer = this.scene.time.delayedCall(5000, () => {
+        this.advanceFromNode(node);
+      });
+    }
   }
 
   private advanceFromNode(node: DialogueNode): void {
