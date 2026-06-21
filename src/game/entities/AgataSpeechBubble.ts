@@ -3,7 +3,9 @@ import type { DialogueNode, DialogueOption } from '../../data/dialogueData';
 
 const BUBBLE_DEPTH = 120;
 const PADDING = 16;
-
+/**
+ * Burbuja de diálogo dibujada en Phaser, anclada al personaje.
+ */
 export class AgataSpeechBubble {
   public readonly container: Phaser.GameObjects.Container;
   private readonly scene: Phaser.Scene;
@@ -11,7 +13,6 @@ export class AgataSpeechBubble {
   private readonly nameText: Phaser.GameObjects.Text;
   private readonly bodyText: Phaser.GameObjects.Text;
   private readonly hintText: Phaser.GameObjects.Text;
-  private highlightGraphics: Phaser.GameObjects.Graphics | null = null;
   private readonly choiceTexts: Phaser.GameObjects.Text[] = [];
   private choiceZones: Phaser.GameObjects.Zone[] = [];
   private onAdvance: (() => void) | null = null;
@@ -45,35 +46,6 @@ export class AgataSpeechBubble {
     this.container.add([this.bg, this.nameText, this.bodyText, this.hintText]);
   }
 
-  public showHighlight(): void {
-    if (this.highlightGraphics) return;
-    this.highlightGraphics = this.scene.add.graphics();
-    this.container.addAt(this.highlightGraphics, 0);
-    const w = this.bubbleW;
-    const h = this.bubbleH;
-    const r = 18;
-    this.scene.tweens.add({
-      targets: this.highlightGraphics,
-      alpha: { from: 0.2, to: 0.6 },
-      duration: 800,
-      yoyo: true,
-      repeat: -1,
-      onUpdate: () => {
-        if (!this.highlightGraphics) return;
-        this.highlightGraphics.clear();
-        this.highlightGraphics.lineStyle(6, 0xf6a000, this.highlightGraphics.alpha);
-        this.highlightGraphics.strokeRoundedRect(-3, -3, w + 6, h + 6, r + 2);
-      }
-    });
-  }
-
-  public hideHighlight(): void {
-    if (this.highlightGraphics) {
-      this.highlightGraphics.destroy();
-      this.highlightGraphics = null;
-    }
-  }
-
   public show(
     node: DialogueNode,
     anchorX: number,
@@ -86,16 +58,11 @@ export class AgataSpeechBubble {
     this.clearChoices();
 
     const isMobile = this.scene.scale.width <= 480;
-
-    // En móvil la burbuja ocupa casi todo el ancho
-    this.bubbleW = isMobile
-      ? this.scene.scale.width - 24
-      : Math.min(maxWidth, 320);
-
+    this.bubbleW = Math.min(maxWidth, isMobile ? Math.min(this.scene.scale.width * 0.78, 300) : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
-
-    // En móvil reducimos el font de body para que quepa más texto
-    this.bodyText.setFontSize(isMobile ? '14px' : '15px');
+    this.bodyText.setFontSize(isMobile ? '12px' : '15px');
+    this.nameText.setFontSize(isMobile ? '10px' : '11px');
+    this.hintText.setFontSize(isMobile ? '10px' : '11px');
 
     this.nameText.setText('ÁGATA');
     this.bodyText.setText(node.text);
@@ -114,12 +81,6 @@ export class AgataSpeechBubble {
     }
 
     this.bubbleH = contentH + PADDING;
-
-    // En móvil limitamos la altura máxima de la burbuja al 30% de pantalla
-    if (isMobile) {
-      this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
-}
-
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
     this.container.setVisible(true);
@@ -135,16 +96,17 @@ export class AgataSpeechBubble {
 
   private createChoiceButton(opt: DialogueOption, index: number): Phaser.GameObjects.Text {
     const isMobile = this.scene.scale.width <= 480;
-    const y = PADDING + 18 + this.bodyText.height + 16 + index * 44;
+    const rowH = isMobile ? 36 : 44;
+    const y = PADDING + 18 + this.bodyText.height + (isMobile ? 10 : 16) + index * rowH;
     const label = this.scene.add
       .text(PADDING, y, opt.text, {
         fontFamily: 'Montserrat, system-ui, sans-serif',
-        fontSize: isMobile ? '13px' : '14px',
+        fontSize: isMobile ? '12px' : '14px',
         color: '#ffffff',
         backgroundColor: '#705893',
-        padding: { x: 14, y: 10 },
+        padding: { x: isMobile ? 10 : 14, y: isMobile ? 7 : 10 },
         fixedWidth: this.bubbleW - PADDING * 2,
-        wordWrap: { width: this.bubbleW - PADDING * 2 - 28 },
+        wordWrap: { width: this.bubbleW - PADDING * 2 - (isMobile ? 20 : 28) },
       })
       .setInteractive({ useHandCursor: true });
     label.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -164,54 +126,50 @@ export class AgataSpeechBubble {
   }
 
   private redrawBubble(): void {
-    const isMobile = this.scene.scale.width <= 480;
     const w = this.bubbleW;
     const h = this.bubbleH;
-    const r = 16;
+    const r = 18;
     this.bg.clear();
     this.bg.fillStyle(0xffffff, 0.97);
     this.bg.lineStyle(2, 0x705893, 0.45);
     this.bg.fillRoundedRect(0, 0, w, h, r);
     this.bg.strokeRoundedRect(0, 0, w, h, r);
 
-    if (!isMobile) {
-      const tailX = w * 0.15;
-      this.bg.fillTriangle(tailX, h, tailX + 24, h, tailX + 8, h + 12);
-      this.bg.lineStyle(2, 0x705893, 0.45);
-      this.bg.lineBetween(tailX, h, tailX + 8, h + 12);
-      this.bg.lineBetween(tailX + 24, h, tailX + 8, h + 12);
-    }
+    const tailX = w * 0.15;
+    this.bg.fillTriangle(tailX, h, tailX + 24, h, tailX + 8, h + 12);
+    this.bg.lineStyle(2, 0x705893, 0.45);
+    this.bg.lineBetween(tailX, h, tailX + 8, h + 12);
+    this.bg.lineBetween(tailX + 24, h, tailX + 8, h + 12);
 
     this.nameText.setPosition(PADDING, PADDING);
     this.bodyText.setPosition(PADDING, PADDING + 18);
     this.hintText.setPosition(PADDING, h - 24);
   }
 
+  // CORREGIDO: Se revierte al comportamiento original de posicionamiento directo en la coordenada superior fija
   private layoutAt(anchorX: number, anchorTopY: number): void {
     const isMobile = this.scene.scale.width <= 480;
-    const margin = 12;
+    const margin = 8;
 
     if (isMobile) {
-      // 🌟 CORRECCIÓN: Posicionamos la burbuja inmediatamente a la derecha de Ágata
-      const x = anchorX + 35;
-      const y = anchorTopY - this.bubbleH * 0.65;
-      this.container.setPosition(
-        Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin),
-        Phaser.Math.Clamp(y, margin, this.scene.scale.height - this.bubbleH - margin)
+      const x = Phaser.Math.Clamp(
+        anchorX - this.bubbleW / 2,
+        margin,
+        this.scene.scale.width - this.bubbleW - margin,
       );
-    } else {
-      let x = anchorX - this.bubbleW * 0.2;
-      x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
-      const y = anchorTopY - this.bubbleH - 10;
-      this.container.setPosition(x, y);
+      this.container.setPosition(x, anchorTopY);
+      return;
     }
+
+    let x = anchorX - this.bubbleW * 0.2;
+    x = Phaser.Math.Clamp(x, margin, this.scene.scale.width - this.bubbleW - margin);
+    const y = anchorTopY - this.bubbleH - 10;
+    this.container.setPosition(x, y);
   }
 
   public setPosition(anchorX: number, anchorTopY: number, maxWidth: number): void {
     const isMobile = this.scene.scale.width <= 480;
-    this.bubbleW = isMobile
-      ? this.scene.scale.width - 110 // Sincronizado con el espacio restante calculado en layout.ts
-      : Math.min(maxWidth, 320);
+    this.bubbleW = Math.min(maxWidth, isMobile ? 350 : 320);
     this.bodyText.setWordWrapWidth(this.bubbleW - PADDING * 2);
     this.redrawBubble();
     this.layoutAt(anchorX, anchorTopY);
@@ -220,32 +178,29 @@ export class AgataSpeechBubble {
   public enableTapAdvance(): void {
     this.choiceZones.forEach((z) => z.destroy());
     this.choiceZones.length = 0;
-
-    if (!this.hintText.visible) return;
-
     const zone = this.scene.add
       .zone(0, 0, this.bubbleW, this.bubbleH)
       .setOrigin(0, 0)
       .setInteractive({ useHandCursor: true });
-
     zone.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      p.event?.stopPropagation();
-      this.onAdvance?.();
+      if (this.hintText.visible) {
+        p.event?.stopPropagation();
+        this.onAdvance?.();
+      }
     });
-
     this.container.add(zone);
     this.container.sendToBack(zone);
     this.choiceZones.push(zone);
   }
 
   public hide(): void {
-    this.clearChoices();
     this.scene.tweens.add({
       targets: this.container,
       alpha: 0,
       duration: 180,
       onComplete: () => {
         this.container.setVisible(false);
+        this.clearChoices();
       },
     });
   }
