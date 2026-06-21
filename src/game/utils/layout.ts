@@ -9,7 +9,8 @@ export interface SafeZones {
   isCoarsePointer: boolean;
 }
 
-const PLAY_MARGIN = 10;
+/** Margen interno del canvas (HUD va fuera del canvas en flex). */
+const PLAY_MARGIN = 12;
 
 export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const w = scale.width;
@@ -18,125 +19,105 @@ export function getSafeZones(scale: Phaser.Scale.ScaleManager): SafeZones {
   const isCoarsePointer =
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
+  /** HUD en React encima del canvas: el juego ya no reserva píxeles extra arriba. */
   const hudTop = 0;
+  // En móvil, Ágata ocupa una porción más clara de la izquierda
+  const agataLaneWidth = Math.round(w * (isMobile ? 0.42 : 0.28));
 
-  if (isMobile) {
-    // Móvil: Ágata flota abajo-izquierda, portales usan toda la pantalla
-    const agataLaneWidth = Math.round(w * 0.26);
-    const playArea = new Phaser.Geom.Rectangle(
-      PLAY_MARGIN,
-      PLAY_MARGIN,
-      w - PLAY_MARGIN * 2,
-      h - PLAY_MARGIN * 2,
-    );
-    return { hudTop, agataLaneWidth, playArea, isMobile, isCoarsePointer };
-  }
-
-  // Escritorio: Ágata ocupa carril izquierdo
-  const agataLaneWidth = Math.round(w * 0.28);
   const playArea = new Phaser.Geom.Rectangle(
-    agataLaneWidth + PLAY_MARGIN,
+    agataLaneWidth + (isMobile ? 0 : PLAY_MARGIN),
     PLAY_MARGIN,
-    w - agataLaneWidth - PLAY_MARGIN * 2,
+    w - agataLaneWidth - PLAY_MARGIN,
     h - PLAY_MARGIN * 2,
   );
+
   return { hudTop, agataLaneWidth, playArea, isMobile, isCoarsePointer };
 }
 
+/** Posiciones de estaciones de marca en un pilar (zona derecha). */
 export function getPillarStationPositions(
   playArea: Phaser.Geom.Rectangle,
   count: number,
-  isMobile = false,
 ): Array<{ x: number; y: number }> {
   if (count <= 0) return [];
+  // CORREGIDO: Subido el umbral a < 300 para que detecte el móvil real de ~276px y use columna única
+  const isMobile = playArea.width < 300; 
+  const cols = isMobile ? 1 : Math.min(count, 3);
+  const rows = Math.ceil(count / cols);
   const out: Array<{ x: number; y: number }> = [];
-
-  if (isMobile) {
-    // En móvil: marcas centradas verticalmente con bastante espacio
-    const startY = playArea.y + playArea.height * 0.28;
-    const endY   = playArea.y + playArea.height * 0.72;
-    const step   = count > 1 ? (endY - startY) / (count - 1) : 0;
-    for (let i = 0; i < count; i++) {
-      out.push({
-        x: playArea.x + playArea.width * 0.5,
-        y: startY + step * i,
-      });
-    }
-  } else {
-    for (let i = 0; i < count; i++) {
-      out.push({
-        x: playArea.x + playArea.width * 0.5,
-        y: playArea.y + playArea.height * (0.3 + (i / Math.max(count - 1, 1)) * 0.45),
-      });
-    }
+  for (let i = 0; i < count; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    out.push({
+      x: playArea.x + playArea.width * ((col + 1) / (cols + 1)),
+      y: playArea.y + playArea.height * (isMobile
+        ? (0.18 + (row / Math.max(rows - 1, 1)) * 0.54)
+        : (0.38 + (row / Math.max(rows, 1)) * 0.28)),
+    });
   }
   return out;
 }
 
+/**
+ * NPC Ágata: columna izquierda del área de juego, tamaño legible en móvil.
+ */
 export function getAgataNpcPosition(
   scale: Phaser.Scale.ScaleManager,
   zones: SafeZones,
 ): { x: number; y: number; scale: number; bubbleMaxWidth: number } {
-  const w = scale.width;
-  const h = scale.height;
+  const targetHeight = zones.isMobile
+    ? Math.min(scale.height * 0.38, 280)
+    : Math.min(scale.height * 0.42, 340);
 
-  if (zones.isMobile) {
-    // 🌟 CORRECCIÓN: Movemos a Ágata a la zona superior izquierda para unificarla con su bocadillo de texto
-    const targetHeight = 90; // Escala compacta ideal para cabecera móvil
-    const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
-    return {
-      x: 50,
-      y: 155, // Situada arriba bajo la banda del HUD, visible y sin solaparse con tarjetas inferiores
-      scale: spriteScale,
-      bubbleMaxWidth: w - 110, // Ancho disponible a la derecha para que la burbuja quepa limpia
-    };
-  }
-
-  // Escritorio
-  const targetHeight = Math.min(h * 0.42, 340);
   const spriteScale = targetHeight / AGATA_FRAME_HEIGHT;
+
+  // Posición: izquierda, apoyada en el fondo
+  const x = zones.isMobile
+    ? zones.agataLaneWidth * 0.55
+    : zones.agataLaneWidth * 0.52;
+
+  const y = scale.height - (zones.isMobile ? 25 : 40);
+
   return {
-    x: zones.agataLaneWidth * 0.52,
-    y: h - 40,
+    x,
+    y,
     scale: spriteScale,
-    bubbleMaxWidth: 340,
+    bubbleMaxWidth: zones.isMobile ? scale.width * 0.78 : 340,
   };
 }
 
+/** Portales en la zona derecha del hub (sin pisar a Ágata). */
 export function getHubPortalPositions(
   playArea: Phaser.Geom.Rectangle,
-  isMobile = false,
 ): Array<{ x: number; y: number }> {
+  const isMobile = playArea.x > 50;
+
   if (isMobile) {
-    // Móvil: cuadrícula 2×2 centrada, con espacio para burbuja arriba y Ágata abajo
-    // La burbuja ocupa ~140px arriba, Ágata ocupa ~150px abajo
-    // Dejamos margen: portales entre 20% y 80% del alto
-    const cx = playArea.x + playArea.width * 0.5;
-    const top    = playArea.y + playArea.height * 0.22;
-    const bottom = playArea.y + playArea.height * 0.76;
-    const midY   = (top + bottom) / 2;
-    const halfY  = (bottom - top) * 0.28;
-    const halfX  = playArea.width * 0.27;
-
-    return [
-      { x: cx - halfX, y: midY - halfY }, // top-left
-      { x: cx + halfX, y: midY - halfY }, // top-right
-      { x: cx - halfX, y: midY + halfY }, // bottom-left
-      { x: cx + halfX, y: midY + halfY }, // bottom-right
-    ];
-  }
-
-  // Escritorio
-  const cols = [0.25, 0.75];
-  const rows = [0.28, 0.72];
-  const out: Array<{ x: number; y: number }> = [];
-  for (const row of rows) {
-    for (const col of cols) {
-      out.push({
-        x: playArea.x + playArea.width * col,
-        y: playArea.y + playArea.height * row,
-      });
+    // CORREGIDO: Unificado en columnas [0.25, 0.75] y filas [0.28, 0.65] para liberar el tercio superior para el texto
+    const cols = [0.25, 0.75];
+    const rows = [0.28, 0.65];
+    const out: Array<{ x: number; y: number }> = [];
+    for (const row of rows) {
+      for (const col of cols) {
+        out.push({
+          x: playArea.x + playArea.width * col,
+          y: playArea.y + playArea.height * row,
+        });
+      }
     }
+    return out;
+  } else {
+    const cols = [0.32, 0.72];
+    const rows = [0.35, 0.68];
+    const out: Array<{ x: number; y: number }> = [];
+    for (const row of rows) {
+      for (const col of cols) {
+        out.push({
+          x: playArea.x + playArea.width * col,
+          y: playArea.y + playArea.height * row,
+        });
+      }
+    }
+    return out;
   }
-  return out;
 }
