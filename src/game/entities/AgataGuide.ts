@@ -11,7 +11,7 @@ import { hubIntroDialogue } from '../../data/dialogueData';
 import { findBrandById } from '../../data/brandData';
 import { buildBrandDialogue } from '../../data/buildBrandDialogue';
 
-export type AgataAnimState = 'idle' | 'jump' | 'talk';
+export type AgataAnimState = 'idle' | 'jump' | 'talk' | 'walk';
 
 /**
  * Ágata como NPC: usando imágenes individuales (idle, jump).
@@ -25,12 +25,11 @@ export class AgataGuide {
   private zones: SafeZones;
   private breatheTween: Phaser.Tweens.Tween | null = null;
   private jumpTween: Phaser.Tweens.Tween | null = null;
+  private walkTimer: Phaser.Time.TimerEvent | null = null;
   private activeDialogue: BrandDialogue | null = null;
   private currentNodeId: string | null = null;
   private activeBrandId: string | null = null;
   private visible = false;
-  private autoAdvanceTimer: Phaser.Time.TimerEvent | null = null;
-  private highlightTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -54,9 +53,18 @@ export class AgataGuide {
         repeat: 0,
       });
     }
+    if (!scene.anims.exists('agata-walk-anim')) {
+      scene.anims.create({
+        key: 'agata-walk-anim',
+        frames: scene.anims.generateFrameNumbers('agata-walk', { start: 0, end: 15 }),
+        frameRate: 14,
+        repeat: -1,
+      });
+    }
 
-    this.aura = scene.add.circle(0, 0, 90, 0xf6a000, 0.12);
-    this.aura.setStrokeStyle(2, 0xf6a000, 0.35);
+    this.aura = scene.add
+      .circle(0, 0, 40, 0x8a2be2, 0.4)
+      .setStrokeStyle(2, 0xd32f2f, 0.8);
 
     this.sprite = scene.add.sprite(0, 0, 'agata-idle');
     this.sprite.setOrigin(0.5, 1);
@@ -74,13 +82,6 @@ export class AgataGuide {
     EventBus.on('start-brand-dialogue', this.onBrandDialogue, this);
   }
 
-  public update(): void {
-    if (this.currentNodeId && this.activeDialogue) {
-      const anchor = this.getBubbleAnchor();
-      this.bubble.setPosition(anchor.x, anchor.y, anchor.maxWidth);
-    }
-  }
-
   public showCharacter(): void {
     this.applyLayout();
     if (!this.visible) {
@@ -95,27 +96,27 @@ export class AgataGuide {
         duration: 400,
         ease: 'Cubic.easeOut',
       });
+      // Pequena secuencia de entrada: camina 1s, luego idle
+      this.playState('walk');
+      this.walkTimer?.remove();
+      this.walkTimer = this.scene.time.delayedCall(1000, () => {
+        if (!this.activeDialogue) this.playState('idle');
+      });
     } else {
       this.root.setAlpha(1);
+      this.playState('idle');
     }
-    this.playState('idle');
   }
 
   /** Cierra el diálogo activo para permitir navegación (portales, marcas, volver). */
   public forceEndDialogue(): void {
-    if (this.activeDialogue) {
-      this.endDialogue();
-    } else {
-      // Incluso si no hay diálogo activo, nos aseguramos de que la burbuja esté oculta
-      this.bubble.hide();
-    }
+    if (this.activeDialogue) this.endDialogue();
   }
 
-  public playDialogue(dialogue: BrandDialogue, brandId?: string, onComplete?: () => void): void {
+  public playDialogue(dialogue: BrandDialogue, brandId?: string): void {
     this.showCharacter();
     this.activeDialogue = dialogue;
     this.activeBrandId = brandId ?? null;
-    (this.activeDialogue as any)._onFinished = onComplete;
     this.showNode(dialogue.startNodeId);
   }
 
@@ -128,17 +129,10 @@ export class AgataGuide {
     }
     this.currentNodeId = nodeId;
 
-    this.clearTimers();
-
-    // Pasados 5 segundos de inactividad, se activa el resalte visual/brillo en la burbuja.
-    this.highlightTimer = this.scene.time.delayedCall(5000, () => {
-      this.bubble.showHighlight();
-    });
-
     if (node.onComplete === 'frase-clave-collected' && this.activeBrandId) {
       const brand = findBrandById(this.activeBrandId);
       if (brand) {
-        EventBus.emit('frase-clave-collected', brand.name);
+        EventBus.emit('frase-clave-collected', brand.result.fraseClave);
       }
     }
 
@@ -148,18 +142,9 @@ export class AgataGuide {
       onChoice: (nextId) => this.handleChoice(nextId),
     });
     this.bubble.enableTapAdvance();
-
-    // 🌟 CORRECCIÓN EXACTA: El avance automático de 5 segundos deja de ser universal.
-    // Solo se ejecutará si el nodo de diálogo tiene la propiedad 'autoAdvance' activa.
-    if ((node as any).autoAdvance) {
-      this.autoAdvanceTimer = this.scene.time.delayedCall(5000, () => {
-        this.advanceFromNode(node);
-      });
-    }
   }
 
   private advanceFromNode(node: DialogueNode): void {
-    this.clearTimers();
     if (node.options && node.options.length > 0) return;
     if (node.nextId === 'exit' || node.nextId === 'end' || !node.nextId) {
       this.endDialogue();
@@ -169,7 +154,6 @@ export class AgataGuide {
   }
 
   private handleChoice(nextId: string): void {
-    this.clearTimers();
     if (!nextId) {
       this.endDialogue();
       return;
@@ -183,35 +167,24 @@ export class AgataGuide {
   }
 
   private endDialogue(): void {
-    this.clearTimers();
-    const callback = (this.activeDialogue as any)?._onFinished;
-    const isBrandDialogue = !!this.activeBrandId;
-    const lastNodeId = this.currentNodeId;
-
     this.bubble.hide();
     this.activeDialogue = null;
     this.currentNodeId = null;
     this.activeBrandId = null;
     this.playState('idle');
     EventBus.emit('dialogue-finished');
-
-    // Si terminó una marca en RoomScene, avisar de pilar completado
-    if (isBrandDialogue && this.scene.scene.key === 'RoomScene' && (lastNodeId === 'end' || lastNodeId === 'exit')) {
-      const pillarId = (this.scene as any).pillarId;
-      if (pillarId) {
-        EventBus.emit('pillar-completed', pillarId);
-      }
-    }
-
-    if (callback) callback();
   }
 
   public playState(state: AgataAnimState): void {
     if (state === 'idle') {
       this.sprite.play('agata-idle-anim', true);
+      this.breatheTween?.resume();
       this.startIdleBreathing();
     } else if (state === 'jump') {
       this.jump();
+    } else if (state === 'walk') {
+      this.breatheTween?.pause();
+      this.sprite.play('agata-walk-anim', true);
     }
   }
 
@@ -227,12 +200,6 @@ export class AgataGuide {
       duration: 300,
       yoyo: true,
       ease: 'Cubic.easeOut',
-      onUpdate: () => {
-        if (this.currentNodeId) {
-           const anchor = this.getBubbleAnchor();
-           this.bubble.setPosition(anchor.x, anchor.y, anchor.maxWidth);
-        }
-      },
       onComplete: () => {
         this.sprite.play('agata-idle-anim');
         this.sprite.setY(0);
@@ -251,12 +218,6 @@ export class AgataGuide {
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
-      onUpdate: () => {
-        if (this.currentNodeId) {
-           const anchor = this.getBubbleAnchor();
-           this.bubble.setPosition(anchor.x, anchor.y, anchor.maxWidth);
-        }
-      }
     });
   }
 
@@ -279,9 +240,17 @@ export class AgataGuide {
     }
   }
 
+  // CORREGIDO: Revertido a la posición superior original fija (y: 6) pero ampliando maxWidth a 0.92
   private getBubbleAnchor(): { x: number; y: number; maxWidth: number } {
     const pos = getAgataNpcPosition(this.scene.scale, this.zones);
-    const headY = this.root.y + (this.sprite.y * this.root.scaleY) - (this.sprite.displayHeight) - 5;
+    if (this.zones.isMobile) {
+      return {
+        x: this.scene.scale.width / 2,
+        y: 6,
+        maxWidth: this.scene.scale.width * 0.92,
+      };
+    }
+    const headY = this.root.y - this.sprite.displayHeight - 5;
     return {
       x: this.root.x,
       y: headY,
@@ -293,23 +262,10 @@ export class AgataGuide {
     this.applyLayout();
   };
 
-  private clearTimers(): void {
-    if (this.autoAdvanceTimer) {
-      this.autoAdvanceTimer.destroy();
-      this.autoAdvanceTimer = null;
-    }
-    if (this.highlightTimer) {
-      this.highlightTimer.destroy();
-      this.highlightTimer = null;
-    }
-    this.bubble.hideHighlight();
-  }
-
   private onHubIntro = (): void => {
     this.playDialogue(hubIntroDialogue);
   };
 
-  // 🌟 CORRECCIÓN: Inyecta el pilar dinámicamente y congela el diálogo sin añadir botones de avance para obligar a seleccionar una marca.
   private onPillarIntro = (pillarName: string): void => {
     const dialogue: BrandDialogue = {
       startNodeId: 'start',
@@ -317,7 +273,14 @@ export class AgataGuide {
         start: {
           id: 'start',
           speaker: 'agata',
-          text: `Elige una de estas 3 marcas para que veamos su estrategia de ${pillarName}.`,
+          text: `¡Cuidado! Has entrado en las ruinas del pilar de ${pillarName}. Toca una lápida para desenterrar su trágico error...`,
+          nextId: 'end',
+        },
+        end: {
+          id: 'end',
+          speaker: 'agata',
+          text: 'Cada tumba esconde un Antídoto que necesitas. ¡Investiga!',
+          options: [{ text: '💀 ¡A investigar!', nextId: '' }],
         },
       },
     };
@@ -350,6 +313,7 @@ export class AgataGuide {
     this.scene.scale.off('resize', this.onResize, this);
     this.breatheTween?.stop();
     this.jumpTween?.stop();
+    this.walkTimer?.remove();
     this.bubble.destroy();
     this.root.destroy();
   }
